@@ -60,7 +60,7 @@ class _DraggableMessageButtonState extends State<DraggableMessageButton> {
           ? const Color.fromARGB(255, 255, 255, 255) // White when at top
           : const Color(0xFF1468C7), // Default color
       child: Icon(
-        Icons.message_rounded,
+        Icons.notifications_none_rounded,
         color: isAtTop
             ? const Color(0xFF1468C7) // Blue icon when at top
             : const Color(0xFFFFFFFF), // White icon normally

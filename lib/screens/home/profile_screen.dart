@@ -302,7 +302,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (shouldLogout == true) {
       await _authController.deleteToken();
-      Get.offAllNamed('/login'); // Navigate to login and clear stack
+      Get.toNamed('/login'); // Navigate to login and clear stack
     }
   }
 
@@ -316,7 +316,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           icon:
               const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.black),
           onPressed: () {
-            Get.offAllNamed('/home'); // Navigate to home and clear stack
+            Get.toNamed('/home'); // Navigate to home and clear stack
           },
         ),
         title: const Text(
@@ -440,7 +440,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       textColor = _darkText;
       onMainActionButtonTap = () async {
         await _authController.deleteToken(); // Clear token
-        Get.offAllNamed('/login'); // Navigate to login
+        Get.toNamed('/login'); // Navigate to login
       };
       mainActionButtonText = 'Log In Again';
     } else if (isConnectionError || isGenericApiError) {

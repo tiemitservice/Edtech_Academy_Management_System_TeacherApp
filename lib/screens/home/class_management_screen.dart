@@ -9,11 +9,6 @@ import 'package:school_management_system_teacher_app/routes/app_routes.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:school_management_system_teacher_app/controllers/auth_controller.dart';
 
-// ======================================================================
-// 1. DATA MODELS
-// ======================================================================
-
-/// Represents a single class taught by a teacher.
 class TeacherClass {
   final String id;
   final String name;
@@ -72,17 +67,12 @@ class Subject {
   }
 }
 
-// ======================================================================
-// 2. SERVICE LAYER
-// ======================================================================
-
 class ClassService {
   final String _classesBaseUrl =
       'https://edtech-academy-management-system-server.onrender.com/api/classes';
   final String _subjectsBaseUrl =
       'https://edtech-academy-management-system-server.onrender.com/api/subjects';
 
-  /// Fetches all subjects and returns them as a map for easy lookup.
   Future<Map<String, String>> _fetchSubjects() async {
     try {
       final response = await http.get(Uri.parse(_subjectsBaseUrl));
@@ -102,11 +92,9 @@ class ClassService {
     }
   }
 
-  /// Fetches and filters classes for a specific teacher by staff ID.
   Future<List<TeacherClass>> fetchTeacherClasses(String teacherStaffId) async {
     try {
-      final Map<String, String> subjectsMap =
-          await _fetchSubjects(); // Fetch subjects first
+      final Map<String, String> subjectsMap = await _fetchSubjects();
 
       final response = await http.get(Uri.parse(_classesBaseUrl));
 
@@ -117,12 +105,12 @@ class ClassService {
         return allClassesApi
             .map((classJson) {
               final String subjectId = classJson['subject'] as String? ?? '';
-              final String subjectName = subjectsMap[subjectId] ??
-                  'Unknown Subject'; // Resolve subject name
+              final String subjectName =
+                  subjectsMap[subjectId] ?? 'Unknown Subject';
               return TeacherClass.fromJson(
                   classJson as Map<String, dynamic>, subjectName);
             })
-            .where((c) => c.staffId == teacherStaffId) // Filter by staffId
+            .where((c) => c.staffId == teacherStaffId)
             .toList();
       } else {
         throw Exception(
@@ -133,10 +121,6 @@ class ClassService {
     }
   }
 }
-
-// ======================================================================
-// 3. UI SCREEN
-// ======================================================================
 
 class ClassManagementScreen extends StatefulWidget {
   const ClassManagementScreen({Key? key}) : super(key: key);
@@ -173,7 +157,7 @@ class _ClassManagementScreenState extends State<ClassManagementScreen>
   static final Color _skeletonHighlightColor = Colors.grey.shade100;
 
   // --- Font Family Constant ---
-  static const String _fontFamily = 'NotoSerifKhmer';
+  static const String _fontFamily = 'KantumruyPro';
 
   @override
   void initState() {
@@ -261,6 +245,17 @@ class _ClassManagementScreenState extends State<ClassManagementScreen>
           fontSize: 18,
         ),
       ),
+      // Added actions for the notification icon
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.notifications_none_rounded,
+              color: _darkText, size: 24),
+          onPressed: () {
+            Get.toNamed(AppRoutes.studentPermission);
+          },
+        ),
+        const SizedBox(width: 8), // Add some spacing to the right
+      ],
     );
   }
 
@@ -409,7 +404,8 @@ class _ClassManagementScreenState extends State<ClassManagementScreen>
               onPressed: _loadClassData,
               icon: const Icon(Icons.refresh_rounded),
               label: const Text('Retry',
-                  style: TextStyle(fontFamily: _fontFamily)), // Apply NotoSerifKhmer
+                  style: TextStyle(
+                      fontFamily: _fontFamily)), // Apply NotoSerifKhmer
               style: ElevatedButton.styleFrom(
                 backgroundColor: _primaryBlue,
                 foregroundColor: Colors.white,

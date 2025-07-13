@@ -358,7 +358,7 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
             ),
             const SizedBox(width: 20), // Spacing between text and SVG
             SvgPicture.asset(
-              'assets/images/onboarding/teacher_check.svg',
+              'assets/images/teacher_management/atd.svg',
               height: 100, // Fixed height for a distinct visual element
               width: 100,
               fit: BoxFit.contain,

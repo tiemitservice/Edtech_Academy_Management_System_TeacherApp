@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:school_management_system_teacher_app/screens/home/check_attendence_screen.dart';
+import 'package:school_management_system_teacher_app/screens/home/student_permissions_screen.dart';
 // If you uncommented StudentScoresListScreen before, make sure it's uncommented here too:
 
 class TeacherManagementScreen extends StatefulWidget {
@@ -202,8 +203,13 @@ class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
           title: "Student's Permission",
           subtitle: "Check Student's ask for permission in each classes",
           onTap: () {
-            print("Student's Permission tapped");
-            // TODO: Navigate to Student Permission Screen
+            Get.to(() => StudentPermissionsScreen(
+                  // Make sure StudentScoresListScreen is imported
+                  classId: widget.classId,
+                  className: widget.className,
+                  studentsCount: int.parse(widget.studentsCount),
+                  subjectName: widget.subjectName,
+                ));
           },
         ),
         _buildMainCard(

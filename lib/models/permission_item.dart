@@ -1,4 +1,3 @@
-
 // lib/models/permission_item.dart
 
 import 'package:get/get.dart'; // Required for RxBool
@@ -9,10 +8,12 @@ import 'package:school_management_system_teacher_app/models/student.dart'; // Im
 class PermissionItem {
   final String id; // The _id of the permission request
   final String studentId; // ID of the student
-  final String sentToStaffId; // ID of the teacher it was sent to ('sent_to' field)
+  final String
+      sentToStaffId; // ID of the teacher it was sent to ('sent_to' field)
   final String reason;
   final List<DateTime> holdDates; // Parsed dates for the permission period
-  String status; // e.g., "pending", "approved", "denied" (from 'permissent_status')
+  String
+      status; // e.g., "pending", "approved", "denied" (from 'permissent_status')
   final DateTime createdAt;
 
   // UI-specific and reactive state:
@@ -32,7 +33,8 @@ class PermissionItem {
   }) : this.isExpanded = isExpanded ?? false.obs; // Initialize if null
 
   factory PermissionItem.fromJson(Map<String, dynamic> json) {
-    final List<dynamic> holdDateStrings = json['hold_date'] as List<dynamic>? ?? [];
+    final List<dynamic> holdDateStrings =
+        json['hold_date'] as List<dynamic>? ?? [];
     final List<DateTime> parsedHoldDates = holdDateStrings
         .map((dateStr) => DateTime.tryParse(dateStr.toString()))
         .where((date) => date != null)
@@ -42,11 +44,12 @@ class PermissionItem {
     return PermissionItem(
       id: json['_id'] as String? ?? '',
       studentId: json['studentId'] as String? ?? '',
-      sentToStaffId: json['sent_to'] as String? ?? '',
+      sentToStaffId: json['sent_to'] as String? ?? 'a',
       reason: json['reason'] as String? ?? 'No reason provided',
       holdDates: parsedHoldDates,
       status: json['permissent_status'] as String? ?? 'unknown',
-      createdAt: DateTime.tryParse(json['created_at'] as String? ?? '') ?? DateTime.now(),
+      createdAt: DateTime.tryParse(json['created_at'] as String? ?? '') ??
+          DateTime.now(),
       // When creating from JSON, it's typically not expanded by default
       isExpanded: false.obs,
     );
@@ -65,7 +68,8 @@ class PermissionItem {
     final sortedDates = List<DateTime>.from(holdDates)..sort();
 
     final startDate = sortedDates.first;
-    final endDate = sortedDates.length > 1 ? sortedDates.last : sortedDates.first;
+    final endDate =
+        sortedDates.length > 1 ? sortedDates.last : sortedDates.first;
 
     final dateFormat = DateFormat('EEE, dd/MM/yyyy');
 
@@ -91,7 +95,10 @@ class PermissionItem {
       status: status ?? this.status,
       createdAt: createdAt,
       studentDetails: studentDetails ?? this.studentDetails,
-      isExpanded: RxBool(isExpandedValue ?? this.isExpanded.value), // Create a new RxBool instance based on the provided value
+      isExpanded: RxBool(isExpandedValue ??
+          this
+              .isExpanded
+              .value), // Create a new RxBool instance based on the provided value
     );
   }
 }

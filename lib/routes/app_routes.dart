@@ -7,7 +7,6 @@ import 'package:school_management_system_teacher_app/screens/home/class_manageme
 import 'package:school_management_system_teacher_app/screens/home/edit_profile_screen.dart';
 import 'package:school_management_system_teacher_app/screens/home/home_screen.dart';
 import 'package:school_management_system_teacher_app/screens/home/my_permission_screen.dart';
-import 'package:school_management_system_teacher_app/screens/home/notifications_screen.dart';
 import 'package:school_management_system_teacher_app/screens/home/profile_screen.dart';
 import 'package:school_management_system_teacher_app/screens/home/student_permissions_screen.dart';
 import 'package:school_management_system_teacher_app/screens/home/student_score_input_screen.dart';
@@ -18,6 +17,8 @@ import 'package:school_management_system_teacher_app/screens/splash_screen.dart'
 class AppRoutes {
   // Define all route paths as static constants for easy access and typo prevention
   static const String splash = '/';
+  static const String notifications = '/notifications';
+
   static const String onboarding = '/onboarding';
   static const String login = '/login';
   static const String forgotPassword = '/forgot-password';
@@ -32,7 +33,6 @@ class AppRoutes {
   static const String studentScoresList = '/student-scores-list';
   static const String studentPermission = '/student-permission';
   static const String myPermission = '/my-permission';
-  static const String notification = '/notification';
 
   // Define the list of GetPage routes
   static final List<GetPage> routes = [
@@ -104,20 +104,20 @@ class AppRoutes {
     ),
     GetPage(
       name: studentPermission,
-      page: () => StudentPermissionsScreen(
-        classId: Get.arguments['classId'],
-        className: Get.arguments['className'],
-        studentsCount: Get.arguments['studentsCount'],
-        subjectName: Get.arguments['subjectName'],
-      ),
+      page: () {
+        // Retrieve arguments safely with null checks and defaults if necessary
+        final args = Get.arguments ?? {};
+        return StudentPermissionsScreen(
+          classId: args['classId'] ?? '', // Provide a default empty string
+          className: args['className'] ?? 'Unknown Class',
+          studentsCount: args['studentsCount'] ?? 0,
+          subjectName: args['subjectName'] ?? 'N/A',
+        );
+      },
     ),
     GetPage(
       name: myPermission,
       page: () => MyPermissionScreen(), // Assumes no arguments are needed
     ),
-    GetPage(
-      name: notification,
-      page: () => NotificationsScreen(),
-    )
   ];
 }
