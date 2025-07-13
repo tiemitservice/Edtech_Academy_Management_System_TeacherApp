@@ -67,6 +67,7 @@ class PermissionItem {
     final List<DateTime> parsedHoldDates = holdDateStrings
         .map((dateStr) =>
             DateTime.tryParse(dateStr.toString())!) // Ensure dateStr is String
+        // ignore: unnecessary_null_comparison
         .where((date) => date != null)
         .toList()
         .cast<DateTime>();
@@ -79,7 +80,8 @@ class PermissionItem {
       holdDates: parsedHoldDates,
       status: json['permissent_status'] ?? 'unknown', // Use 'permissent_status'
       createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
-      initialIsExpanded: false, // Default to not expanded when created from JSON
+      initialIsExpanded:
+          false, // Default to not expanded when created from JSON
     );
   }
 
@@ -115,7 +117,8 @@ class PermissionItem {
       status: status ?? this.status,
       createdAt: createdAt,
       studentDetails: studentDetails, // Preserve existing student details
-      initialIsExpanded: isExpanded ?? this.isExpanded.value, // Preserve or update expansion state
+      initialIsExpanded: isExpanded ??
+          this.isExpanded.value, // Preserve or update expansion state
     );
   }
 }
@@ -249,7 +252,8 @@ class StudentPermissionController extends GetxController {
 
   // --- Action Handlers: Update Permission Status ---
   Future<void> updatePermissionStatus(
-      String permissionId, String newStatus, String classId) async { // Added classId
+      String permissionId, String newStatus, String classId) async {
+    // Added classId
     // Show a loading indicator (e.g., for the whole screen or specific card)
     // Here, we're using the main screen's isLoading for simplicity, but you could add a per-card loader.
     isLoading.value = true;
@@ -273,9 +277,11 @@ class StudentPermissionController extends GetxController {
           // Create a new PermissionItem instance with the updated status
           // and preserve the current isExpanded state
           final currentPermission = studentPermissions[index];
-          studentPermissions[index] = currentPermission
-              .copyWith(status: newStatus.toLowerCase(), isExpanded: currentPermission.isExpanded.value);
-          studentPermissions.refresh(); // Crucial to force Obx to re-render the list item
+          studentPermissions[index] = currentPermission.copyWith(
+              status: newStatus.toLowerCase(),
+              isExpanded: currentPermission.isExpanded.value);
+          studentPermissions
+              .refresh(); // Crucial to force Obx to re-render the list item
         }
       } else {
         final errorBody = jsonDecode(response.body);
