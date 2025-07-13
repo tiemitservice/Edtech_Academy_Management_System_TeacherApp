@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+
 class BottomMessageWidget extends StatelessWidget {
   final String message;
   final bool
       isSuccess; // Add a flag to differentiate between error and success messages
 
-  const BottomMessageWidget({required this.message, required this.isSuccess});
+  // --- Font Family Constant ---
+  static const String _fontFamily = 'KantumruyPro';
+
+  const BottomMessageWidget(
+      {super.key, required this.message, required this.isSuccess});
 
   @override
   Widget build(BuildContext context) {
@@ -16,35 +21,36 @@ class BottomMessageWidget extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
           decoration: BoxDecoration(
             color: isSuccess
                 ? Colors.green
-                : Colors.red, // Conditional color
+                : Colors.red, // Conditional color based on message type
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.2),
                 blurRadius: 8,
-                offset: Offset(0, 4), // Shadow position
+                offset: const Offset(0, 4), // Shadow position
               ),
             ],
           ),
           child: Row(
             children: [
               Icon(
-                isSuccess ? Icons.check_circle : Icons.info,
+                isSuccess ? Icons.check_circle : Icons.info, // Conditional icon
                 color: Colors.white,
                 size: 22,
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   message,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
+                    fontFamily: _fontFamily, // Apply NotoSerifKhmer
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -57,6 +63,7 @@ class BottomMessageWidget extends StatelessWidget {
   }
 }
 
+// Function to display the custom bottom message
 void showBottomMessage(BuildContext context, String message,
     {bool isSuccess = false}) {
   final overlay = Overlay.of(context);
@@ -69,7 +76,8 @@ void showBottomMessage(BuildContext context, String message,
 
   overlay.insert(entry);
 
-  Future.delayed(Duration(seconds: 3), () {
+  // Automatically remove the message after 3 seconds
+  Future.delayed(const Duration(seconds: 3), () {
     entry.remove();
   });
 }

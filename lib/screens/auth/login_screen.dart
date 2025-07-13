@@ -24,6 +24,9 @@ class _SignInScreenState extends State<SignInScreen> {
   bool _rememberMe = false;
   bool _isFormValid = false;
 
+  // --- Font Family Constant ---
+  static const String _fontFamily = 'KantumruyPro';
+
   @override
   void initState() {
     super.initState();
@@ -60,7 +63,8 @@ class _SignInScreenState extends State<SignInScreen> {
               Colors.transparent, // Important to allow custom shape
           builder: (context) {
             return ClipRRect(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(25)),
               child: Container(
                 color: Colors.white,
                 padding: EdgeInsets.only(
@@ -72,23 +76,24 @@ class _SignInScreenState extends State<SignInScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.account_circle,
+                    const Icon(Icons.account_circle,
                         color: Color(0xFF1469C7), size: 60),
-                    SizedBox(height: 10),
-                    Text(
+                    const SizedBox(height: 10),
+                    const Text(
                       'Continue with',
-                      style: TextStyle(fontSize: 16, fontFamily: 'Inter'),
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontFamily: _fontFamily), // Apply NotoSerifKhmer
                     ),
-                    SizedBox(height: 5),
+                    const SizedBox(height: 5),
                     Text(
                       savedEmail,
-                      style: TextStyle(
+                      style: const TextStyle(
                           fontSize: 18,
-                          // fontWeight: FontWeight.bold,
                           color: Color(0xFF1469C7),
-                          fontFamily: 'Inter'),
+                          fontFamily: _fontFamily), // Apply NotoSerifKhmer
                     ),
-                    SizedBox(height: 12),
+                    const SizedBox(height: 12),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: List.generate(9, (index) {
@@ -97,7 +102,7 @@ class _SignInScreenState extends State<SignInScreen> {
                           child: Container(
                             width: 6,
                             height: 6,
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               color: Color(0xFF1469C7),
                               shape: BoxShape.circle,
                             ),
@@ -105,7 +110,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         );
                       }),
                     ),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     Row(
                       children: [
                         Expanded(
@@ -116,43 +121,45 @@ class _SignInScreenState extends State<SignInScreen> {
                               Navigator.of(context).pop(true);
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Color(0xFF1469C7),
+                              backgroundColor: const Color(0xFF1469C7),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              padding: EdgeInsets.symmetric(vertical: 14),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
                             ),
-                            child: Text(
+                            child: const Text(
                               'Continue',
                               style: TextStyle(
-                                  fontFamily: 'Inter', color: Colors.white),
+                                  fontFamily: _fontFamily,
+                                  color: Colors.white), // Apply NotoSerifKhmer
                             ),
                           ),
                         ),
-                        SizedBox(width: 12),
+                        const SizedBox(width: 12),
                         Expanded(
                           child: OutlinedButton(
                             onPressed: () {
                               Navigator.of(context).pop(false);
                             },
                             style: OutlinedButton.styleFrom(
-                              side: BorderSide(color: Color(0xFF1469C7)),
+                              side: const BorderSide(color: Color(0xFF1469C7)),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              padding: EdgeInsets.symmetric(vertical: 14),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
                             ),
-                            child: Text(
+                            child: const Text(
                               'Switch Account',
                               style: TextStyle(
                                   color: Color(0xFF1469C7),
-                                  fontFamily: 'Inter'),
+                                  fontFamily:
+                                      _fontFamily), // Apply NotoSerifKhmer
                             ),
                           ),
                         ),
                       ],
                     ),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
                   ],
                 ),
               ),
@@ -192,15 +199,17 @@ class _SignInScreenState extends State<SignInScreen> {
 
     setState(() => _isLoading = true);
 
-    final url = Uri.parse(
+    final loginUrl = Uri.parse(
       'https://edtech-academy-management-system-server.onrender.com/api/login',
     );
+    final staffUrl = Uri.parse(
+        'https://edtech-academy-management-system-server.onrender.com/api/staffs');
     final data = {'email': email, 'password': password};
     final AuthController _authController = AuthController();
 
     try {
       final response = await http.post(
-        url,
+        loginUrl,
         headers: {'Content-Type': 'application/json'},
         body: json.encode(data),
       );
@@ -208,6 +217,7 @@ class _SignInScreenState extends State<SignInScreen> {
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
         final prefs = await SharedPreferences.getInstance();
+
         await prefs.setString('userId', responseData['user']['id']);
         await prefs.setString('token', responseData['token']);
         await prefs.setString('email', email);
@@ -218,7 +228,28 @@ class _SignInScreenState extends State<SignInScreen> {
         await _authController.saveUserName(responseData['user']['name']);
         await _authController.saveToken(responseData['token']);
 
-        await _saveCredentialsIfNeeded(); // 👈 save if needed
+        final staffResponse = await http.get(staffUrl);
+
+        if (staffResponse.statusCode == 200) {
+          final staffData = json.decode(staffResponse.body);
+          final List<dynamic> staffs = staffData['data'];
+
+          final matchingStaff = staffs.firstWhereOrNull(
+            (staff) => staff['email'] == email,
+          );
+
+          if (matchingStaff != null) {
+            await _authController.saveStaffId(matchingStaff['_id']);
+            print("Staff ID saved: ${matchingStaff['_id']}");
+          } else {
+            print("No staff found with email: $email");
+          }
+        } else {
+          print(
+              "Failed to load staff data: ${staffResponse.statusCode} ${staffResponse.body}");
+        }
+
+        await _saveCredentialsIfNeeded();
         Get.offNamed(AppRoutes.home);
       } else {
         final responseData = json.decode(response.body);
@@ -233,7 +264,10 @@ class _SignInScreenState extends State<SignInScreen> {
 
   void _showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
+      SnackBar(
+          content: Text(message,
+              style: const TextStyle(
+                  fontFamily: _fontFamily))), // Apply NotoSerifKhmer
     );
   }
 
@@ -248,7 +282,7 @@ class _SignInScreenState extends State<SignInScreen> {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     SystemChrome.setSystemUIOverlayStyle(
-      SystemUiOverlayStyle(
+      const SystemUiOverlayStyle(
         statusBarColor: Colors.white,
         statusBarIconBrightness: Brightness.dark,
       ),
@@ -261,9 +295,12 @@ class _SignInScreenState extends State<SignInScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
           child: Theme(
             data: Theme.of(context).copyWith(
+              // Apply default font family to the entire theme subtree within this screen
+              textTheme:
+                  Theme.of(context).textTheme.apply(fontFamily: _fontFamily),
               textSelectionTheme: const TextSelectionThemeData(
                 cursorColor: Color(0xFF1469C7),
-                selectionColor: Color(0xFF90CAF9), // Custom selection color
+                selectionColor: Color(0xFF90CAF9),
                 selectionHandleColor: Color(0xFF1469C7),
               ),
             ),
@@ -283,7 +320,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       fontSize: 26,
                       fontWeight: FontWeight.bold,
                       color: Colors.black,
-                      fontFamily: 'Inter',
+                      fontFamily: _fontFamily, // Apply NotoSerifKhmer
                     ),
                   ),
                   const SizedBox(height: 32),
@@ -292,13 +329,15 @@ class _SignInScreenState extends State<SignInScreen> {
                   TextFormField(
                     cursorColor: const Color(0xFF1469C7),
                     style: const TextStyle(
-                        fontFamily: 'Inter', color: Colors.black),
+                        fontFamily: _fontFamily,
+                        color: Colors.black), // Apply NotoSerifKhmer
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
                       labelText: 'Email',
-                      floatingLabelStyle:
-                          const TextStyle(color: Color(0xFF1469C7)),
+                      floatingLabelStyle: const TextStyle(
+                          color: Color(0xFF1469C7),
+                          fontFamily: _fontFamily), // Apply NotoSerifKhmer
                       focusedBorder: OutlineInputBorder(
                         borderSide: const BorderSide(
                             color: Color(0xFF1469C7), width: 2),
@@ -306,7 +345,8 @@ class _SignInScreenState extends State<SignInScreen> {
                       ),
                       hintText: 'email@example.com',
                       hintStyle: const TextStyle(
-                          color: Colors.grey, fontFamily: 'Inter'),
+                          color: Colors.grey,
+                          fontFamily: _fontFamily), // Apply NotoSerifKhmer
                       suffixIcon: const Icon(Icons.email_rounded,
                           color: Color(0xFF1469C7)),
                       border: OutlineInputBorder(
@@ -315,7 +355,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       ),
                     ),
                     validator: (value) => value == null || value.trim().isEmpty
-                        ? 'Email is required'
+                        ? 'Email is required' // Validation message will inherit theme font or fallback
                         : null,
                   ),
                   const SizedBox(height: 16),
@@ -324,14 +364,16 @@ class _SignInScreenState extends State<SignInScreen> {
                   TextFormField(
                     cursorColor: const Color(0xFF1469C7),
                     style: const TextStyle(
-                        fontFamily: 'Inter', color: Colors.black),
+                        fontFamily: _fontFamily,
+                        color: Colors.black), // Apply NotoSerifKhmer
                     controller: _passwordController,
                     obscureText: _obscurePassword,
                     keyboardType: TextInputType.visiblePassword,
                     decoration: InputDecoration(
                       labelText: 'Password',
-                      floatingLabelStyle:
-                          const TextStyle(color: Color(0xFF1469C7)),
+                      floatingLabelStyle: const TextStyle(
+                          color: Color(0xFF1469C7),
+                          fontFamily: _fontFamily), // Apply NotoSerifKhmer
                       focusedBorder: OutlineInputBorder(
                         borderSide: const BorderSide(
                             color: Color(0xFF1469C7), width: 2),
@@ -339,7 +381,8 @@ class _SignInScreenState extends State<SignInScreen> {
                       ),
                       hintText: 'Enter your password',
                       hintStyle: const TextStyle(
-                          color: Colors.grey, fontFamily: 'Inter'),
+                          color: Colors.grey,
+                          fontFamily: _fontFamily), // Apply NotoSerifKhmer
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword
@@ -355,7 +398,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       ),
                     ),
                     validator: (value) => value == null || value.trim().isEmpty
-                        ? 'Password is required'
+                        ? 'Password is required' // Validation message will inherit theme font or fallback
                         : null,
                   ),
                   const SizedBox(height: 10),
@@ -376,7 +419,8 @@ class _SignInScreenState extends State<SignInScreen> {
                           const Text(
                             'Remember Me',
                             style: TextStyle(
-                                fontFamily: 'Inter', color: Colors.black),
+                                fontFamily: _fontFamily,
+                                color: Colors.black), // Apply NotoSerifKhmer
                           ),
                         ],
                       ),
@@ -393,7 +437,8 @@ class _SignInScreenState extends State<SignInScreen> {
                         child: const Text(
                           'Forgot Password?',
                           style: TextStyle(
-                              fontFamily: 'Inter', color: Color(0xFF1469C7)),
+                              fontFamily: _fontFamily,
+                              color: Color(0xFF1469C7)), // Apply NotoSerifKhmer
                         ),
                       ),
                     ],
@@ -419,7 +464,7 @@ class _SignInScreenState extends State<SignInScreen> {
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 16,
-                                fontFamily: 'Inter',
+                                fontFamily: _fontFamily, // Apply NotoSerifKhmer
                               ),
                             ),
                     ),

@@ -20,6 +20,14 @@ dependencies:
   flutter_launcher_icons: ^0.14.3
   shared_preferences: ^2.5.3
   connectivity_plus: ^6.1.4
+  shimmer: ^3.0.0
+  image_picker: ^1.1.2
+  intl: ^0.20.2
+  skeletonizer: ^1.4.3
+  flutter_staggered_animations: ^1.1.1
+  syncfusion_flutter_datepicker: ^29.1.38
+  socket_io_client: ^3.1.2
+  web_socket_channel: ^3.0.3
 
 flutter_icons:
   android: true
@@ -37,17 +45,26 @@ flutter:
   uses-material-design: true
 
   assets:
+    - assets/data/province.json
+    - assets/data/district.json
+    - assets/data/commune.json
+    - assets/data/village.json
     - assets/images/
     - assets/images/onboarding/
     - assets/images/home/
     - assets/images/logo/
     - assets/images/pngs/
     - assets/images/svgs/
+    - assets/images/teacher_management/
 
   fonts:
     - family: AKbalthomFreedomPlus
       fonts:
         - asset: assets/fonts/akbalthom-freedom-plus.ttf
+
+    - family: NotoSerifKhmer
+      fonts:
+        - asset: assets/fonts/NotoSerifKhmer/NotoSerifKhmer-VariableFont_wdth,wght.ttf
 
     - family: Moul
       fonts:

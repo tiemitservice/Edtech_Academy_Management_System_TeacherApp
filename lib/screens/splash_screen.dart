@@ -20,6 +20,9 @@ class _SplashScreenState extends State<SplashScreen>
   late final Animation<double> _pulseAnimation;
   final _storage = const FlutterSecureStorage();
 
+  // --- Font Family Constant ---
+  static const String _fontFamily = 'KantumruyPro';
+
   @override
   void initState() {
     super.initState();
@@ -66,15 +69,19 @@ class _SplashScreenState extends State<SplashScreen>
       context: context,
       barrierDismissible: false,
       builder: (_) => AlertDialog(
-        title: const Text('No Internet'),
-        content: const Text('Please check your internet connection.'),
+        title: const Text('No Internet',
+            style: TextStyle(fontFamily: _fontFamily)), // Apply NotoSerifKhmer
+        content: const Text('Please check your internet connection.',
+            style: TextStyle(fontFamily: _fontFamily)), // Apply NotoSerifKhmer
         actions: [
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
               _initApp(); // Retry
             },
-            child: const Text('Retry'),
+            child: const Text('Retry',
+                style:
+                    TextStyle(fontFamily: _fontFamily)), // Apply NotoSerifKhmer
           ),
         ],
       ),
@@ -114,10 +121,10 @@ class _SplashScreenState extends State<SplashScreen>
                 const Text(
                   "FOR TEACHER",
                   style: TextStyle(
-                    fontSize: 25,
-                    color: forTeacherColor,
-                    fontFamily: 'AKbalthomFreedomPlus',
-                  ),
+                      fontSize: 25,
+                      color: forTeacherColor,
+                      fontFamily: _fontFamily, // Apply NotoSerifKhmer
+                      fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -133,7 +140,7 @@ class _SplashScreenState extends State<SplashScreen>
                   style: TextStyle(
                     fontSize: 12,
                     color: textColor.withOpacity(0.4),
-                    fontFamily: 'AKbalthomFreedomPlus',
+                    fontFamily: _fontFamily, // Apply NotoSerifKhmer
                   ),
                 ),
                 const SizedBox(height: 5),

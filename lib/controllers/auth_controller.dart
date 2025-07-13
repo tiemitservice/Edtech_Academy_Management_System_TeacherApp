@@ -120,4 +120,25 @@ class AuthController extends GetxController {
     print("user id: ${prefs.getString('userId')}");
     return prefs.getString('userId') ?? "";
   }
+
+  // save staff id
+  Future<void> saveStaffId(String staffId) async {
+    print("Saving staff id: $staffId");
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('staffId', staffId);
+  }
+
+  // get staff id
+  Future<String> getStaffId() async {
+    print("Getting staff id");
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('staffId') ?? "";
+  }
+
+  // delete staff id
+  Future<void> deleteStaffId() async {
+    print("Deleting staff id");
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('staffId');
+  }
 }

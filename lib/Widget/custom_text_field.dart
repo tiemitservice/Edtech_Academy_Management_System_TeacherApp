@@ -1,12 +1,16 @@
 // custom_text_field.dart
 
 import 'package:flutter/material.dart';
+
 class CustomTextField extends StatelessWidget {
   final TextEditingController controller;
   final String label;
   final String hint;
   final bool obscureText;
   final Widget? suffixIcon;
+
+  // --- Font Family Constant ---
+  static const String _fontFamily = 'KantumruyPro';
 
   const CustomTextField({
     super.key,
@@ -28,7 +32,7 @@ class CustomTextField extends StatelessWidget {
         obscureText: obscureText,
         style: const TextStyle(
           fontSize: 18,
-          fontFamily: 'Inter',
+          fontFamily: _fontFamily, // Apply NotoSerifKhmer
           color: Color.fromARGB(255, 0, 0, 0),
         ),
         decoration: InputDecoration(
@@ -38,13 +42,13 @@ class CustomTextField extends StatelessWidget {
           labelStyle: const TextStyle(
             fontSize: 16,
             color: Color.fromARGB(255, 0, 0, 0),
-            fontFamily: 'Inter',
+            fontFamily: _fontFamily, // Apply NotoSerifKhmer
             fontWeight: FontWeight.w400,
           ),
           hintStyle: const TextStyle(
             fontSize: 16,
             color: Color.fromARGB(255, 0, 0, 0),
-            fontFamily: 'Inter',
+            fontFamily: _fontFamily, // Apply NotoSerifKhmer
             fontWeight: FontWeight.w400,
           ),
           enabledBorder: const UnderlineInputBorder(
