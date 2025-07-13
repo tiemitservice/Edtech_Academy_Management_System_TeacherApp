@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart'; // Make sure you have flutter_svg in your pubspec.yaml
+import 'package:get/get.dart'; // Import GetX for navigation
 
 // You might want to define this in a separate file (e.g., models/notification_item.dart)
 class NotificationItem {
@@ -27,24 +28,31 @@ class NotificationsScreen extends StatefulWidget {
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
   // --- UI Constants ---
-  static const Color _primaryBlue = Color(0xFF1469C7); // Dominant blue from your previous code
-  static const Color _cardBackground = Colors.white; // White for the notification cards
+  static const Color _primaryBlue =
+      Color(0xFF1469C7); // Dominant blue from your previous code
+  static const Color _cardBackground =
+      Colors.white; // White for the notification cards
   static const Color _darkText = Color(0xFF2C3E50); // Dark text color
   static const Color _mediumText = Color(0xFF7F8C8D); // Medium grey text
   static const Color _greenTag = Color(0xFF27AE60); // Green for the tag
+  static const Color _redTag = Color(0xFFE74C3C); // Red for urgent/denied tags
+  static const Color _orangeTag = Color(0xFFF39C12); // Orange for pending tags
   static const Color _borderGrey = Color(0xFFE0E6ED); // Subtle border color
 
   // --- Font Family (Adjust if your font is different) ---
-  static const String _fontFamily = 'NotoSerifKhmer'; // Assuming this is still your preferred font
+  static const String _fontFamily =
+      'NotoSerifKhmer'; // Assuming this is still your preferred font
 
   // --- Mock Data ---
   final List<NotificationItem> _notifications = [
     NotificationItem(
       title: "Student Request for Leave",
       tag: "Pending",
-      description: "John Doe has requested a leave for 3 days due to family reasons.",
+      description:
+          "John Doe has requested a leave for 3 days due to family reasons.",
       date: "Mon, 10/06/2025",
-      iconPath: 'assets/images/placeholder_icon_1.svg', // Replace with actual paths
+      iconPath:
+          'assets/images/placeholder_icon_1.svg', // Replace with actual paths
     ),
     NotificationItem(
       title: "New Assignment Graded",
@@ -70,7 +78,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     NotificationItem(
       title: "Teacher Meeting Scheduled",
       tag: "Important",
-      description: "Staff meeting to discuss curriculum changes on Friday, 13th June.",
+      description:
+          "Staff meeting to discuss curriculum changes on Friday, 13th June.",
       date: "Fri, 06/06/2025",
       iconPath: 'assets/images/placeholder_icon_5.svg',
     ),
@@ -95,7 +104,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   : ListView.separated(
                       padding: const EdgeInsets.all(16.0),
                       itemCount: _notifications.length,
-                      separatorBuilder: (context, index) => const SizedBox(height: 12),
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 12),
                       itemBuilder: (context, index) {
                         final notification = _notifications[index];
                         return _buildNotificationCard(notification);
@@ -114,9 +124,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       backgroundColor: _primaryBlue,
       elevation: 0, // Flat app bar
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+        icon: const Icon(Icons.arrow_back_ios_new_rounded,
+            color: Colors.white, size: 20),
         onPressed: () {
-          // Implement navigation back, e.g., Navigator.pop(context);
+          // FIX: Use Get.back() for consistent navigation with GetX
+          Get.back();
         },
       ),
       title: const Text(
@@ -133,18 +145,42 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         // Example: Add more icons if needed based on the blurred image
         IconButton(
           icon: const Icon(Icons.wifi, color: Colors.white, size: 20),
-          onPressed: () {},
+          onPressed: () {
+            // Handle Wi-Fi icon press
+          },
         ),
         IconButton(
           icon: const Icon(Icons.battery_full, color: Colors.white, size: 20),
-          onPressed: () {},
+          onPressed: () {
+            // Handle battery icon press
+          },
         ),
       ],
     );
   }
 
+  // Helper function to get tag color based on tag text
+  Color _getTagColor(String tag) {
+    switch (tag.toLowerCase()) {
+      case 'pending':
+        return _orangeTag;
+      case 'completed':
+        return _greenTag;
+      case 'urgent':
+        return _redTag;
+      case 'important':
+        return _primaryBlue; // Using primary blue for important
+      case 'upcoming':
+        return Colors.blueGrey; // A neutral color for upcoming
+      default:
+        return _mediumText; // Default for unknown tags
+    }
+  }
+
   /// Builds a single notification card.
   Widget _buildNotificationCard(NotificationItem notification) {
+    final Color tagColor = _getTagColor(notification.tag);
+
     return Card(
       elevation: 0, // No default shadow
       shape: RoundedRectangleBorder(
@@ -169,31 +205,34 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   children: [
                     Row(
                       children: [
-                        Text(
-                          notification.title,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: _darkText,
-                            fontFamily: _fontFamily,
+                        Flexible(
+                          child: Text(
+                            notification.title,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: _darkText,
+                              fontFamily: _fontFamily,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(width: 8),
-                        // Green Tag
+                        // FIX: Dynamically color the tag based on its content
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: _greenTag.withOpacity(0.1),
+                            color: tagColor.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
                             notification.tag,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
-                              color: _greenTag,
+                              color: tagColor,
                               fontFamily: _fontFamily,
                             ),
                           ),
@@ -251,7 +290,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               height: 150,
             ),
             const SizedBox(height: 24),
-            const Text(
+            Text(
               'No New Notifications',
               style: TextStyle(
                 fontSize: 18,
@@ -262,9 +301,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'You are all caught up! Check back later for updates.',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 14,
                 color: _mediumText,
                 fontFamily: _fontFamily,

@@ -1,55 +1,10 @@
-import 'dart:async'; // For TimeoutException
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:shimmer/shimmer.dart';
 import 'package:school_management_system_teacher_app/controllers/auth_controller.dart';
-import 'package:school_management_system_teacher_app/Widget/super_profile_picture.dart'; // Ensure this widget is correctly implemented and accessible
-
-// ======================================================================
-// CONSTANTS (Moved for better organization and consistency)
-// ======================================================================
-
-class AppColors {
-  static const Color primaryBlue = Color(0xFF1469C7);
-  static const Color darkText = Color(0xFF2C3E50);
-  static const Color mediumText = Color(0xFF7F8C8D);
-  static const Color errorRed = Color(0xFFDC3545);
-  static const Color warningOrange = Color(0xFFF39C12); // Specific for warnings
-  static const Color successGreen = Color(0xFF27AE60);
-  static const Color profileAvatarDefaultBgColor = Colors.grey;
-  static const Color profileAvatarDefaultTextColor = Colors.white;
-  static const Color shimmerBaseColor = Color(0xFFE0E0E0); // Light grey
-  static const Color shimmerHighlightColor = Color(0xFFF0F0F0); // Lighter grey
-}
-
-class AppFonts {
-  static const String fontFamily =
-      'KantumruyPro'; // Ensure this font is correctly set up in pubspec.yaml
-}
-
-class AppDurations {
-  static const Duration apiTimeout =
-      Duration(seconds: 10); // Standard API timeout
-  static const Duration snackbarDuration = Duration(seconds: 3);
-}
-
-class AppRoutes {
-  static const String login = '/login';
-  static const String home = '/home';
-  static const String editProfile = '/edit-profile'; // Example route
-}
-
-class AppApi {
-  static const String baseUrl =
-      'https://edtech-academy-management-system-server.onrender.com/api';
-  static const String staffsEndpoint = '$baseUrl/staffs';
-}
-
-// ======================================================================
-// DATA MODEL
-// ======================================================================
+import 'package:school_management_system_teacher_app/Widget/super_profile_picture.dart';
 
 /// Represents the data structure for a staff member's profile.
 class StaffProfile {
@@ -65,19 +20,12 @@ class StaffProfile {
 
   factory StaffProfile.fromJson(Map<String, dynamic> json) {
     return StaffProfile(
-      // Assuming 'image' for imageUrl and 'eng_name' for full name based on common patterns
-      // If your API uses 'image_url' or 'name', adjust accordingly.
       imageUrl: json['image'] as String? ?? '',
-      fullName: json['eng_name'] as String? ??
-          '', // Corrected based on typical API response for English name
+      fullName: json['en_name'] as String? ?? '',
       email: json['email'] as String? ?? '',
     );
   }
 }
-
-// ======================================================================
-// PROFILE SCREEN
-// ======================================================================
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -91,51 +39,55 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   StaffProfile? _userProfile;
   bool _isLoading = true;
-  String?
-      _errorMessage; // Stores critical errors (e.g., network, profile not found)
-  String?
-      _warningMessage; // Stores non-critical warnings (e.g., incomplete profile)
+  String? _errorMessage;
+
+  static const Color _primaryBlue = Color(0xFF1469C7);
+  static const Color _darkText = Color(0xFF2C3E50);
+  static const Color _errorRed = Color(0xFFDC3545);
+  static const Color _profileAvatarDefaultBgColor = Colors.grey;
+  static const Color _profileAvatarDefaultTextColor = Colors.white;
+
+  // --- Font Family Constant ---
+  static const String _fontFamily = 'KantumruyPro';
 
   @override
   void initState() {
     super.initState();
-    _initializeProfile();
-  }
-
-  void _initializeProfile() {
     try {
       _authController = Get.find<AuthController>();
       _fetchUserProfile();
     } catch (e) {
-      debugPrint("ERROR: AuthController not found in ProfileScreen: $e");
-      if (mounted) {
-        setState(() {
-          _errorMessage = 'Initialization Error: Could not find user session.';
-          _isLoading = false;
-        });
-      }
-      _showSnackbar(
-        'Initialization Error',
-        'Could not find user session. Please ensure you are logged in.',
-        isSuccess: false,
-      );
+      print("ERROR: AuthController not found in ProfileScreen: $e");
+      setState(() {
+        _errorMessage = 'Initialization Error: Could not find user session.';
+        _isLoading = false;
+      });
+      // Also show a snackbar for immediate feedback
+      Get.snackbar('Initialization Error',
+          'Could not find user session. Please ensure you are logged in.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: _errorRed,
+          colorText: Colors.white,
+          messageText: Text(
+              'Could not find user session. Please ensure you are logged in.',
+              style: const TextStyle(
+                  fontFamily: _fontFamily, color: Colors.white)),
+          titleText: Text('Initialization Error',
+              style: const TextStyle(
+                  fontFamily: _fontFamily, color: Colors.white)));
     }
   }
 
   Future<void> _fetchUserProfile() async {
-    // Reset states before fetching
-    if (mounted) {
-      setState(() {
-        _isLoading = true;
-        _errorMessage = null; // Clear previous critical error
-        _warningMessage = null; // Clear previous warning
-        _userProfile = null;
-      });
-    }
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+      _userProfile = null;
+    });
 
     try {
       final userEmail = await _authController.getUserEmail();
-      debugPrint(
+      print(
           "DEBUG: ProfileScreen _fetchUserProfile: User email from AuthController: $userEmail");
 
       if (userEmail.isEmpty) {
@@ -148,13 +100,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         return;
       }
 
-      final response = await http
-          .get(Uri.parse('${AppApi.staffsEndpoint}?email=$userEmail'))
-          .timeout(AppDurations.apiTimeout); // Add timeout
-
-      debugPrint(
+      final response = await http.get(Uri.parse(
+          'https://edtech-academy-management-system-server.onrender.com/api/staffs?email=$userEmail'));
+      print(
           "DEBUG: ProfileScreen _fetchUserProfile: API Response Status: ${response.statusCode}");
-      debugPrint(
+      print(
           "DEBUG: ProfileScreen _fetchUserProfile: API Response Body: ${response.body}");
 
       if (response.statusCode == 200) {
@@ -171,17 +121,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _userProfile = StaffProfile.fromJson(userMap);
               _isLoading = false;
             });
-            _checkIncompleteProfileData(); // Check for warnings after profile is set
           }
+          _checkIncompleteProfileData();
         } else {
           if (mounted) {
             setState(() {
-              _errorMessage =
-                  'profile_not_found'; // Use a specific key for this error
+              _errorMessage = 'profile_not_found';
               _isLoading = false;
             });
           }
-          debugPrint("User not found with email: $userEmail");
+          print("User not found with email: $userEmail");
         }
       } else {
         if (mounted) {
@@ -191,64 +140,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _isLoading = false;
           });
         }
-        debugPrint('Failed to load data: ${response.statusCode}');
+        print('Failed to load data: ${response.statusCode}');
       }
-    } on TimeoutException {
+    } on Exception catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage =
-              'Network Error: The request timed out. Please check your internet connection.';
+          _errorMessage = 'An unexpected error occurred: $e';
           _isLoading = false;
         });
       }
-      _showSnackbar(
-          'Network Error', 'Profile data could not be loaded due to a timeout.',
-          isSuccess: false);
-    } on http.ClientException catch (e) {
-      if (mounted) {
-        setState(() {
-          _errorMessage =
-              'Network Error: Could not connect to the server. ${e.message}';
-          _isLoading = false;
-        });
-      }
-      _showSnackbar('Network Error',
-          'Could not connect to the server. Please check your internet connection.',
-          isSuccess: false);
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _errorMessage = 'An unexpected error occurred: ${e.toString()}';
-          _isLoading = false;
-        });
-      }
-      _showSnackbar(
-          'Error', 'An unexpected error occurred while fetching profile.',
-          isSuccess: false);
-      debugPrint('Error fetching profile: $e');
+      print('Error fetching profile: $e');
     }
   }
 
-  /// Checks for incomplete profile data and sets a warning message if found.
   void _checkIncompleteProfileData() {
     if (_userProfile != null) {
-      String? newWarning;
       if (_userProfile!.fullName.trim().isEmpty ||
           _userProfile!.email.trim().isEmpty) {
-        newWarning =
+        _errorMessage =
             'Your profile information is incomplete. Please edit your profile to add your full name and email.';
       } else if (_userProfile!.imageUrl.isEmpty) {
-        newWarning =
+        _errorMessage =
             'Consider uploading a profile picture to personalize your account!';
+      } else {
+        _errorMessage = null;
       }
-
-      // Only update if the warning message has changed
-      if (_warningMessage != newWarning) {
-        if (mounted) {
-          setState(() {
-            _warningMessage = newWarning;
-          });
-        }
+      if (mounted) {
+        setState(() {}); // Rebuild to show updated _errorMessage state
       }
     }
   }
@@ -298,7 +216,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  /// Shows a confirmation dialog before logging out.
   Future<void> _showLogoutConfirmationDialog() async {
     final shouldLogout = await Get.dialog<bool>(
       Dialog(
@@ -314,7 +231,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  fontFamily: AppFonts.fontFamily,
+                  fontFamily: _fontFamily, // Apply NotoSerifKhmer
                   color: Colors.black87,
                 ),
               ),
@@ -325,7 +242,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 style: TextStyle(
                   fontSize: 15,
                   color: Colors.black54,
-                  fontFamily: AppFonts.fontFamily,
+                  fontFamily: _fontFamily, // Apply NotoSerifKhmer
                 ),
               ),
               const SizedBox(height: 24),
@@ -344,7 +261,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: const Text(
                         'Cancel',
                         style: TextStyle(
-                          fontFamily: AppFonts.fontFamily,
+                          fontFamily: _fontFamily, // Apply NotoSerifKhmer
                           fontSize: 14,
                           color: Colors.black87,
                         ),
@@ -354,8 +271,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () => Get.back(
-                          result: true), // Only dismiss dialog with result
+                      onPressed: () {
+                        _authController.deleteToken();
+                        Get.back(result: true);
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
                         shape: RoundedRectangleBorder(
@@ -366,7 +285,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: const Text(
                         'Log Out',
                         style: TextStyle(
-                          fontFamily: AppFonts.fontFamily,
+                          fontFamily: _fontFamily, // Apply NotoSerifKhmer
                           fontSize: 14,
                           color: Colors.white,
                         ),
@@ -383,47 +302,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (shouldLogout == true) {
       await _authController.deleteToken();
-      Get.offAllNamed(AppRoutes.login); // Navigate to login and clear stack
+      Get.offAllNamed('/login'); // Navigate to login and clear stack
     }
-  }
-
-  /// Helper to display a GetX snackbar.
-  void _showSnackbar(String title, String message, {bool isSuccess = true}) {
-    Get.snackbar(
-      title,
-      message,
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: isSuccess ? AppColors.successGreen : AppColors.errorRed,
-      colorText: Colors.white,
-      messageText: Text(message,
-          style: const TextStyle(
-              fontFamily: AppFonts.fontFamily, color: Colors.white)),
-      titleText: Text(title,
-          style: const TextStyle(
-              fontFamily: AppFonts.fontFamily,
-              color: Colors.white,
-              fontWeight: FontWeight.bold)),
-      duration: AppDurations.snackbarDuration,
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Ensure consistent background
+      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         leading: IconButton(
           icon:
               const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.black),
           onPressed: () {
-            Get.offAllNamed(AppRoutes.home); // Navigate to home and clear stack
+            Get.offAllNamed('/home'); // Navigate to home and clear stack
           },
         ),
         title: const Text(
           'Profile',
-          style:
-              TextStyle(color: Colors.black, fontFamily: AppFonts.fontFamily),
+          style: TextStyle(
+              color: Colors.black,
+              fontFamily: _fontFamily), // Apply NotoSerifKhmer
         ),
         centerTitle: true,
         elevation: 0,
@@ -436,19 +336,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // --- Builder Methods ---
-
   Widget _buildSkeletonLoader() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Shimmer.fromColors(
-        baseColor: AppColors.shimmerBaseColor,
-        highlightColor: AppColors.shimmerHighlightColor,
+        baseColor: Colors.grey.shade300,
+        highlightColor: Colors.grey.shade100,
         child: Column(
           children: [
             const CircleAvatar(
               radius: 50,
-              backgroundColor: Colors.white, // Shimmer will apply over this
+              backgroundColor: Colors.white,
             ),
             const SizedBox(height: 16),
             Container(
@@ -485,7 +383,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             width: 40,
             height: 40,
             decoration: const BoxDecoration(
-              color: Colors.white, // Shimmer will apply over this
+              color: Colors.white,
               shape: BoxShape.circle,
             ),
           ),
@@ -494,7 +392,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Container(
               height: 14,
               decoration: BoxDecoration(
-                color: Colors.white, // Shimmer will apply over this
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
@@ -504,7 +402,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             width: 14,
             height: 14,
             decoration: BoxDecoration(
-              color: Colors.white, // Shimmer will apply over this
+              color: Colors.white,
               borderRadius: BorderRadius.circular(4),
             ),
           ),
@@ -515,42 +413,62 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildErrorView(String message) {
     bool isProfileNotFound = message == 'profile_not_found';
-    bool isConnectionError = message.contains('Network Error');
+    // Check for specific error messages that indicate a network issue
+    bool isConnectionError = message.contains('Network Error') ||
+        message.contains('No internet connection');
     bool isGenericApiError = message.contains('Failed to load profile data') ||
         message.contains('An unexpected error occurred');
+    bool isWarning = message.contains('incomplete') ||
+        message.contains('Consider uploading');
 
     IconData icon = Icons.info_outline;
-    Color iconColor = AppColors.warningOrange;
+    Color iconColor = Colors.orange;
     String title = 'Information';
     String displayMessage = message;
-    Color titleColor = AppColors.warningOrange;
-    Color textColor = AppColors.darkText;
-    VoidCallback? onMainActionButtonTap = _fetchUserProfile; // Default retry
+    Color titleColor = Colors.orange.shade800;
+    Color textColor = Colors.grey.shade700;
+    VoidCallback? onMainActionButtonTap;
     String mainActionButtonText = 'Retry';
 
     if (isProfileNotFound) {
       icon = Icons.person_off_outlined;
-      iconColor = AppColors.errorRed;
+      iconColor = _errorRed;
       title = 'Profile Not Found';
       displayMessage =
           'We couldn\'t find your profile data. It might be deleted or an issue occurred with your account. Please try logging in again.';
-      titleColor = AppColors.errorRed;
+      titleColor = _errorRed;
+      textColor = _darkText;
       onMainActionButtonTap = () async {
         await _authController.deleteToken(); // Clear token
-        Get.offAllNamed(AppRoutes.login); // Navigate to login
+        Get.offAllNamed('/login'); // Navigate to login
       };
       mainActionButtonText = 'Log In Again';
     } else if (isConnectionError || isGenericApiError) {
-      icon =
-          Icons.cloud_off_rounded; // More specific icon for network/API issues
-      iconColor = AppColors.errorRed;
+      icon = Icons.error_outline;
+      iconColor = _errorRed;
       title = 'Error';
-      // displayMessage already holds the error message
-      titleColor = AppColors.errorRed;
-      // onMainActionButtonTap remains _fetchUserProfile (Retry)
+      displayMessage = message;
+      titleColor = _errorRed;
+      textColor = _darkText;
+      onMainActionButtonTap = _fetchUserProfile;
+      mainActionButtonText = 'Retry';
+    } else if (isWarning) {
+      icon = Icons.warning_amber_rounded;
+      iconColor = Colors.amber.shade700;
+      title = 'Important!';
+      displayMessage = message;
+      titleColor = Colors.amber.shade800;
+      textColor = _darkText;
+      onMainActionButtonTap = () {
+        // Navigate to edit profile, and refresh this screen on return
+        Get.toNamed('/edit-profile')?.then((result) {
+          // You might get 'true' on successful edit, or null/false otherwise.
+          // Refresh regardless to ensure state consistency.
+          _fetchUserProfile();
+        });
+      };
+      mainActionButtonText = 'Edit Profile';
     }
-    // No specific else if for 'warnings' here, as _errorMessage is for critical issues.
-    // Warnings are handled by _warningMessage separate state.
 
     return Center(
       child: Padding(
@@ -566,7 +484,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: titleColor,
-                  fontFamily: AppFonts.fontFamily),
+                  fontFamily: _fontFamily), // Apply NotoSerifKhmer
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
@@ -576,30 +494,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
               style: TextStyle(
                   fontSize: 15,
                   color: textColor,
-                  fontFamily: AppFonts.fontFamily),
+                  fontFamily: _fontFamily), // Apply NotoSerifKhmer
             ),
-            ...[
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: onMainActionButtonTap,
-              icon: Icon(isProfileNotFound
-                  ? Icons.login
-                  : (isConnectionError || isGenericApiError
-                      ? Icons.refresh
-                      : Icons.info_outline)), // Adjust icon for retry/login
-              label: Text(mainActionButtonText,
-                  style: const TextStyle(fontFamily: AppFonts.fontFamily)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryBlue,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+            if (onMainActionButtonTap != null) ...[
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: onMainActionButtonTap,
+                icon: Icon(isProfileNotFound
+                    ? Icons.login
+                    : (isWarning ? Icons.edit : Icons.refresh)),
+                label: Text(mainActionButtonText,
+                    style: const TextStyle(
+                        fontFamily: _fontFamily)), // Apply NotoSerifKhmer
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _primaryBlue,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 ),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
-            ),
-          ],
+            ],
           ],
         ),
       ),
@@ -607,13 +524,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildProfileView() {
-    // This null check is a fallback, ideally _userProfile should not be null here
     if (_userProfile == null) {
-      return _buildErrorView(
-          'Unexpected error: Profile data is null after loading.');
+      // This case should ideally be handled by _errorMessage, but as a fallback
+      return Center(
+        child: Text(
+          'Failed to load profile data. Please refresh.',
+          style: TextStyle(
+              color: _darkText,
+              fontFamily: _fontFamily), // Apply NotoSerifKhmer
+        ),
+      );
     }
 
     return SingleChildScrollView(
+      // Added SingleChildScrollView to prevent overflow on small screens
       padding: const EdgeInsets.all(20),
       child: Column(
         children: [
@@ -629,12 +553,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 imageUrl: _userProfile!.imageUrl,
                 fullName: _userProfile!.fullName,
                 radius: 50,
-                backgroundColor: AppColors.profileAvatarDefaultBgColor,
-                borderColor: AppColors.primaryBlue,
+                backgroundColor: _profileAvatarDefaultBgColor,
+                borderColor: _primaryBlue,
                 borderWidth: 2,
-                textColor: AppColors.profileAvatarDefaultTextColor,
-                // Make sure SuperProfilePicture also accepts fontFamily if you want consistent text style for initials
-                fontFamily: AppFonts.fontFamily,
+                textColor: _profileAvatarDefaultTextColor,
               ),
             ),
           ),
@@ -646,16 +568,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
             style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                fontFamily: AppFonts.fontFamily,
+                fontFamily: _fontFamily, // Apply NotoSerifKhmer
                 color: _userProfile!.fullName.isNotEmpty
-                    ? AppColors.darkText
-                    : AppColors.mediumText), // Use mediumText for "No Name"
+                    ? _darkText
+                    : Colors.grey),
           ),
           const SizedBox(height: 4),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
-              color: const Color(0xFFE1ECF9), // Specific light blue
+              color: const Color(0xFFE1ECF9),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
@@ -663,8 +585,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ? _userProfile!.email
                   : 'No Email Provided',
               style: TextStyle(
-                color: AppColors.primaryBlue,
-                fontFamily: AppFonts.fontFamily,
+                color: _primaryBlue,
+                fontFamily: _fontFamily, // Apply NotoSerifKhmer
                 fontStyle: _userProfile!.email.isNotEmpty
                     ? FontStyle.normal
                     : FontStyle.italic,
@@ -672,32 +594,51 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           const SizedBox(height: 24),
-          // Display warning message if any
-          if (_warningMessage != null)
+          if (_errorMessage != null &&
+              !_isLoading &&
+              _errorMessage != 'profile_not_found')
             Padding(
               padding:
                   const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.warningOrange.withOpacity(0.1),
+                  color: _errorMessage!.contains('incomplete') ||
+                          _errorMessage!.contains('Consider uploading')
+                      ? Colors.orange.shade50.withOpacity(0.8)
+                      : _errorRed.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                      color: AppColors.warningOrange.withOpacity(0.5)),
+                    color: _errorMessage!.contains('incomplete') ||
+                            _errorMessage!.contains('Consider uploading')
+                        ? Colors.orange.shade200
+                        : _errorRed.withOpacity(0.5),
+                  ),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.info_outline,
-                        color: AppColors.warningOrange, size: 24),
+                    Icon(
+                      _errorMessage!.contains('incomplete') ||
+                              _errorMessage!.contains('Consider uploading')
+                          ? Icons.info_outline
+                          : Icons.error_outline,
+                      color: _errorMessage!.contains('incomplete') ||
+                              _errorMessage!.contains('Consider uploading')
+                          ? Colors.orange.shade700
+                          : _errorRed,
+                      size: 24,
+                    ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        _warningMessage!,
-                        style: const TextStyle(
-                          color: AppColors
-                              .darkText, // Use darkText for warning message
+                        _errorMessage!,
+                        style: TextStyle(
+                          color: _errorMessage!.contains('incomplete') ||
+                                  _errorMessage!.contains('Consider uploading')
+                              ? Colors.orange.shade900
+                              : _darkText,
                           fontSize: 13,
-                          fontFamily: AppFonts.fontFamily,
+                          fontFamily: _fontFamily, // Apply NotoSerifKhmer
                         ),
                       ),
                     ),
@@ -707,15 +648,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           const SizedBox(height: 10),
           ListTile(
-            leading: const Icon(Icons.person, color: AppColors.darkText),
+            leading: const Icon(Icons.person),
             title: const Text('Edit Profile',
-                style: TextStyle(
-                    fontFamily: AppFonts.fontFamily,
-                    color: AppColors.darkText)),
-            trailing: const Icon(Icons.arrow_forward_ios,
-                size: 16, color: AppColors.mediumText),
+                style:
+                    TextStyle(fontFamily: _fontFamily)), // Apply NotoSerifKhmer
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
-              Get.toNamed(AppRoutes.editProfile)?.then((result) {
+              Get.toNamed('/edit-profile')?.then((result) {
                 // Refresh profile data when returning from edit screen
                 _fetchUserProfile();
               });
@@ -723,28 +662,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const Divider(height: 1),
           ListTile(
-            leading: const Icon(Icons.settings, color: AppColors.darkText),
+            leading: const Icon(Icons.settings),
             title: const Text('Settings',
-                style: TextStyle(
-                    fontFamily: AppFonts.fontFamily,
-                    color: AppColors.darkText)),
-            trailing: const Icon(Icons.arrow_forward_ios,
-                size: 16, color: AppColors.mediumText),
+                style:
+                    TextStyle(fontFamily: _fontFamily)), // Apply NotoSerifKhmer
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
-              _showSnackbar(
+              Get.snackbar(
                   'Coming Soon', 'Settings screen is under development!',
-                  isSuccess:
-                      true); // Use isSuccess: true for "Coming Soon" snackbar
+                  snackPosition: SnackPosition.BOTTOM,
+                  backgroundColor: _primaryBlue.withOpacity(0.8),
+                  colorText: Colors.white,
+                  messageText: Text('Settings screen is under development!',
+                      style: const TextStyle(
+                          fontFamily: _fontFamily, color: Colors.white)),
+                  titleText: Text('Coming Soon',
+                      style: const TextStyle(
+                          fontFamily: _fontFamily, color: Colors.white)));
             },
           ),
           const Divider(height: 1),
           ListTile(
-            leading:
-                const Icon(Icons.logout_rounded, color: AppColors.errorRed),
+            leading: const Icon(Icons.logout_rounded, color: Colors.red),
             title: const Text('Logout',
                 style: TextStyle(
-                    color: AppColors.errorRed,
-                    fontFamily: AppFonts.fontFamily)),
+                    color: Colors.red,
+                    fontFamily: _fontFamily)), // Apply NotoSerifKhmer
             onTap: _showLogoutConfirmationDialog,
           ),
         ],
