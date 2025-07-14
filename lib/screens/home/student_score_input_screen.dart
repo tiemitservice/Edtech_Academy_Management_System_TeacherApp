@@ -5,7 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
-import 'package:school_management_system_teacher_app/screens/home/check_attendence_screen.dart'; // Assuming Student model is here
+import 'package:school_management_system_teacher_app/screens/home/check_attendence_screen.dart';
+import 'package:school_management_system_teacher_app/utils/app_colors.dart'; // Assuming Student model is here
 
 // It's assumed the Student model from `check_attendence_screen.dart` is updated
 // to include score fields. The provided Student class already has these.
@@ -38,7 +39,7 @@ class _StudentScoreInputScreenState extends State<StudentScoreInputScreen> {
   static const Color _lightFillColor = Color(0xFFF4F7F9);
 
   // --- Font Family Constant ---
-  static const String _fontFamily = 'KantumruyPro';
+  static const String _fontFamily = AppFonts.fontFamily;
 
   // Controllers for score input fields
   final TextEditingController _quizScoreController = TextEditingController();

@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:school_management_system_teacher_app/Widget/super_profile_picture.dart';
+import 'package:school_management_system_teacher_app/utils/app_colors.dart';
 import 'package:shimmer/shimmer.dart';
 
 import 'package:school_management_system_teacher_app/controllers/auth_controller.dart';
@@ -47,7 +48,7 @@ class _HomeScreenState extends State<HomeScreen>
   static const Color _skeletonHighlightColor = Color(0xFFF5F5F5);
 
   // --- Font Family Constant ---
-  static const String _fontFamily = 'KantumruyPro';
+  static const String _fontFamily = AppFonts.fontFamily;
 
   @override
   void initState() {

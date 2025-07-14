@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:school_management_system_teacher_app/utils/app_colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:school_management_system_teacher_app/controllers/auth_controller.dart';
 import 'package:school_management_system_teacher_app/routes/app_routes.dart';
@@ -25,7 +26,7 @@ class _SignInScreenState extends State<SignInScreen> {
   bool _isFormValid = false;
 
   // --- Font Family Constant ---
-  static const String _fontFamily = 'KantumruyPro';
+  static const String _fontFamily = AppFonts.fontFamily;
 
   @override
   void initState() {

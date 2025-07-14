@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:school_management_system_teacher_app/utils/app_colors.dart';
 import 'package:shimmer/shimmer.dart';
 
 // Import the required screens and the new PermissionController
@@ -32,7 +33,7 @@ class MyPermissionScreen extends StatelessWidget {
   // --- Font Family Constant ---
   // Define the font family name as a constant for consistent use.
   // This should match the 'family' name in your pubspec.yaml.
-  static const String _fontFamily = 'KantumruyPro';
+  static const String _fontFamily = AppFonts.fontFamily;
 
   @override
   Widget build(BuildContext context) {

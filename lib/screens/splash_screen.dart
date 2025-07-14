@@ -6,6 +6,7 @@ import 'dart:async';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:school_management_system_teacher_app/routes/app_routes.dart';
+import 'package:school_management_system_teacher_app/utils/app_colors.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -21,7 +22,7 @@ class _SplashScreenState extends State<SplashScreen>
   final _storage = const FlutterSecureStorage();
 
   // --- Font Family Constant ---
-  static const String _fontFamily = 'KantumruyPro';
+  static const String _fontFamily =AppFonts.fontFamily;
 
   @override
   void initState() {

@@ -15,8 +15,7 @@ class AppColors {
   static const Color skeletonHighlightColor = Color(0xFFF0F0F0);
 }
 
-
 class AppFonts {
   static const String fontFamily =
-      'KantumruyPro'; // IMPORTANT: Ensure this matches the 'family' name in your pubspec.yaml
+      'Suwannaphum'; // IMPORTANT: Ensure this matches the 'family' name in your pubspec.yaml
 }

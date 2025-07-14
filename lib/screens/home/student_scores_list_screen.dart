@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:school_management_system_teacher_app/screens/home/check_attendence_screen.dart'; // Assuming Student model is here
+import 'package:school_management_system_teacher_app/utils/app_colors.dart';
 import 'package:shimmer/shimmer.dart';
 
 // Assuming StudentScoreInputScreen is correctly implemented
@@ -54,7 +55,7 @@ class _StudentScoresListScreenState extends State<StudentScoresListScreen> {
       Color(0xFFDC3545); // Added for consistency with other screens
 
   // --- Font Family Constant ---
-  static const String _fontFamily = 'KantumruyPro';
+  static const String _fontFamily = AppFonts.fontFamily;
 
   late Future<List<StudentScoreSummary>> _studentScoresFuture;
 

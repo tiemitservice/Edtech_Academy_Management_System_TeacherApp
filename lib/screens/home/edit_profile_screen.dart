@@ -6,6 +6,7 @@ import 'package:flutter/services.dart'; // For rootBundle
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
+import 'package:school_management_system_teacher_app/utils/app_colors.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:mime/mime.dart'; // Import for MIME type lookup
 import 'package:http_parser/http_parser.dart'; // Import for MediaType
@@ -204,7 +205,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   static const Color _errorRed = Color(0xFFDC3545);
 
   // --- Font Family Constant ---
-  static const String _fontFamily = 'KantumruyPro';
+  static const String _fontFamily = AppFonts.fontFamily;
 
   @override
   void initState() {
@@ -223,11 +224,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             // Apply font to snackbar
             messageText: const Text(
                 'Could not load user session. Please ensure you are logged in.',
-                style: TextStyle(
-                    color: Colors.white, fontFamily: _fontFamily)),
+                style: TextStyle(color: Colors.white, fontFamily: _fontFamily)),
             titleText: const Text('Initialization Error',
-                style: TextStyle(
-                    color: Colors.white, fontFamily: _fontFamily)));
+                style:
+                    TextStyle(color: Colors.white, fontFamily: _fontFamily)));
         if (mounted) {
           setState(() => _isLoading = false);
         }
@@ -299,11 +299,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           // Apply font to snackbar
           messageText: const Text(
               'Failed to load address data. Please ensure JSON files are correctly added to assets.',
-              style: TextStyle(
-                  color: Colors.white, fontFamily: _fontFamily)),
+              style: TextStyle(color: Colors.white, fontFamily: _fontFamily)),
           titleText: const Text('Error',
-              style: TextStyle(
-                  color: Colors.white, fontFamily: _fontFamily)));
+              style: TextStyle(color: Colors.white, fontFamily: _fontFamily)));
     } finally {
       if (mounted) {
         setState(() => _isLoadingAddressData = false);
@@ -348,8 +346,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 style: const TextStyle(
                     color: Colors.white, fontFamily: _fontFamily)),
             titleText: const Text('Error',
-                style: TextStyle(
-                    color: Colors.white, fontFamily: _fontFamily)));
+                style:
+                    TextStyle(color: Colors.white, fontFamily: _fontFamily)));
       }
     } on SocketException {
       print('ERROR: _fetchPositions: No internet connection.');
@@ -360,11 +358,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           colorText: Colors.white,
           // Apply font to snackbar
           messageText: const Text('No internet connection to fetch positions.',
-              style: TextStyle(
-                  color: Colors.white, fontFamily: _fontFamily)),
+              style: TextStyle(color: Colors.white, fontFamily: _fontFamily)),
           titleText: const Text('Network Error',
-              style: TextStyle(
-                  color: Colors.white, fontFamily: _fontFamily)));
+              style: TextStyle(color: Colors.white, fontFamily: _fontFamily)));
     } catch (e) {
       print('ERROR: _fetchPositions: Exception caught: $e');
       Get.snackbar(
@@ -378,8 +374,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               style: const TextStyle(
                   color: Colors.white, fontFamily: _fontFamily)),
           titleText: const Text('Error',
-              style: TextStyle(
-                  color: Colors.white, fontFamily: _fontFamily)));
+              style: TextStyle(color: Colors.white, fontFamily: _fontFamily)));
     } finally {
       if (mounted) {
         setState(() => _isLoadingPositions = false);
@@ -469,11 +464,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               colorText: Colors.white,
               // Apply font to snackbar
               messageText: const Text('No user data found for this email.',
-                  style: TextStyle(
-                      color: Colors.white, fontFamily: _fontFamily)),
+                  style:
+                      TextStyle(color: Colors.white, fontFamily: _fontFamily)),
               titleText: const Text('Warning',
-                  style: TextStyle(
-                      color: Colors.white, fontFamily: _fontFamily)));
+                  style:
+                      TextStyle(color: Colors.white, fontFamily: _fontFamily)));
           print(
               "WARNING: _loadUserData: Data array is empty for email: $email");
         }
@@ -489,8 +484,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 style: const TextStyle(
                     color: Colors.white, fontFamily: _fontFamily)),
             titleText: const Text('Error',
-                style: TextStyle(
-                    color: Colors.white, fontFamily: _fontFamily)));
+                style:
+                    TextStyle(color: Colors.white, fontFamily: _fontFamily)));
       }
     } on SocketException {
       Get.snackbar(
@@ -501,11 +496,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           // Apply font to snackbar
           messageText: const Text(
               'No internet connection. Please check your network.',
-              style: TextStyle(
-                  color: Colors.white, fontFamily: _fontFamily)),
+              style: TextStyle(color: Colors.white, fontFamily: _fontFamily)),
           titleText: const Text('Network Error',
-              style: TextStyle(
-                  color: Colors.white, fontFamily: _fontFamily)));
+              style: TextStyle(color: Colors.white, fontFamily: _fontFamily)));
     } catch (e) {
       Get.snackbar('Error', 'Error loading profile: $e',
           snackPosition: SnackPosition.BOTTOM,
@@ -516,8 +509,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               style: const TextStyle(
                   color: Colors.white, fontFamily: _fontFamily)),
           titleText: const Text('Error',
-              style: TextStyle(
-                  color: Colors.white, fontFamily: _fontFamily)));
+              style: TextStyle(color: Colors.white, fontFamily: _fontFamily)));
       print("ERROR: _loadUserData: Exception caught: $e");
     } finally {
       // _isLoading is handled by _loadAllData
@@ -718,12 +710,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           backgroundColor: _errorRed,
           colorText: Colors.white,
           // Apply font to snackbar
-          messageText: const Text('Please grant permission to access photos/camera.',
-              style: TextStyle(
-                  color: Colors.white, fontFamily: _fontFamily)),
+          messageText: const Text(
+              'Please grant permission to access photos/camera.',
+              style: TextStyle(color: Colors.white, fontFamily: _fontFamily)),
           titleText: const Text('Permission Denied',
-              style: TextStyle(
-                  color: Colors.white, fontFamily: _fontFamily)));
+              style: TextStyle(color: Colors.white, fontFamily: _fontFamily)));
     } catch (e) {
       print("ERROR: _pickImageSource: General error during image pick: $e");
       Get.snackbar('Error', 'Could not pick image. Please try again.',
@@ -732,11 +723,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           colorText: Colors.white,
           // Apply font to snackbar
           messageText: const Text('Could not pick image. Please try again.',
-              style: TextStyle(
-                  color: Colors.white, fontFamily: _fontFamily)),
+              style: TextStyle(color: Colors.white, fontFamily: _fontFamily)),
           titleText: const Text('Error',
-              style: TextStyle(
-                  color: Colors.white, fontFamily: _fontFamily)));
+              style: TextStyle(color: Colors.white, fontFamily: _fontFamily)));
     }
   }
 
@@ -759,11 +748,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           colorText: Colors.white,
           // Apply font to snackbar
           messageText: const Text('Please fill in all required fields.',
-              style: TextStyle(
-                  color: Colors.white, fontFamily: _fontFamily)),
+              style: TextStyle(color: Colors.white, fontFamily: _fontFamily)),
           titleText: const Text('Missing Fields',
-              style: TextStyle(
-                  color: Colors.white, fontFamily: _fontFamily)));
+              style: TextStyle(color: Colors.white, fontFamily: _fontFamily)));
       print("ERROR: _updateProfile: Missing required fields.");
       return;
     }
@@ -776,11 +763,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           colorText: Colors.white,
           // Apply font to snackbar
           messageText: const Text('User ID is missing. Cannot update profile.',
-              style: TextStyle(
-                  color: Colors.white, fontFamily: _fontFamily)),
+              style: TextStyle(color: Colors.white, fontFamily: _fontFamily)),
           titleText: const Text('Error',
-              style: TextStyle(
-                  color: Colors.white, fontFamily: _fontFamily)));
+              style: TextStyle(color: Colors.white, fontFamily: _fontFamily)));
       print("ERROR: _updateProfile: User ID is null.");
       return;
     }
@@ -865,11 +850,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             colorText: Colors.white,
             // Apply font to snackbar
             messageText: const Text('Profile updated successfully!',
-                style: TextStyle(
-                    color: Colors.white, fontFamily: _fontFamily)),
+                style: TextStyle(color: Colors.white, fontFamily: _fontFamily)),
             titleText: const Text('Success',
-                style: TextStyle(
-                    color: Colors.white, fontFamily: _fontFamily)));
+                style:
+                    TextStyle(color: Colors.white, fontFamily: _fontFamily)));
         print(
             "DEBUG: _updateProfile: Profile updated successfully. Reloading data...");
         await _loadUserData();
@@ -896,8 +880,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 style: const TextStyle(
                     color: Colors.white, fontFamily: _fontFamily)),
             titleText: const Text('Update Failed',
-                style: TextStyle(
-                    color: Colors.white, fontFamily: _fontFamily)));
+                style:
+                    TextStyle(color: Colors.white, fontFamily: _fontFamily)));
         print(
             "ERROR: _updateProfile: Update failed. Full response: $errorMessage");
       }
@@ -910,11 +894,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           // Apply font to snackbar
           messageText: const Text(
               'No internet connection during update. Please check your network.',
-              style: TextStyle(
-                  color: Colors.white, fontFamily: _fontFamily)),
+              style: TextStyle(color: Colors.white, fontFamily: _fontFamily)),
           titleText: const Text('Network Error',
-              style: TextStyle(
-                  color: Colors.white, fontFamily: _fontFamily)));
+              style: TextStyle(color: Colors.white, fontFamily: _fontFamily)));
     } catch (e) {
       Get.snackbar('Network Error', 'An error occurred during update: $e',
           snackPosition: SnackPosition.BOTTOM,
@@ -925,8 +907,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               style: const TextStyle(
                   color: Colors.white, fontFamily: _fontFamily)),
           titleText: const Text('Network Error',
-              style: TextStyle(
-                  color: Colors.white, fontFamily: _fontFamily)));
+              style: TextStyle(color: Colors.white, fontFamily: _fontFamily)));
       print("ERROR: _updateProfile: Exception caught during update: $e");
     } finally {
       if (mounted) {

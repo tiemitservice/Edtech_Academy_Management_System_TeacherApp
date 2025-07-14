@@ -1,3 +1,4 @@
+// tiemitservice/edtech_academy_management_system_teacherapp/Edtech_Academy_Management_System_TeacherApp-a41b5c2bda2f109f4f2f39b45e2ddf1ef6a9d71c/lib/screens/home/student_list_screen.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:school_management_system_teacher_app/models/student.dart'; // Correctly import Student model
@@ -5,34 +6,43 @@ import 'package:school_management_system_teacher_app/utils/app_colors.dart';
 import 'package:school_management_system_teacher_app/controllers/student_list_controller.dart';
 import 'package:school_management_system_teacher_app/Widget/super_profile_picture.dart';
 import 'package:shimmer/shimmer.dart';
-
+import 'package:school_management_system_teacher_app/routes/app_routes.dart'; // Import AppRoutes
 
 class StudentListScreen extends StatelessWidget {
-  const StudentListScreen({Key? key}) : super(key: key);
+  final String? classId;
+  final String? className;
+
+  const StudentListScreen({Key? key, this.classId, this.className})
+      : super(key: key); // NEW: Accept classId and className
 
   @override
   Widget build(BuildContext context) {
-    final StudentListController controller = Get.find<StudentListController>();
+    final StudentListController controller =
+        Get.find<StudentListController>(); //
 
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
-      appBar: _buildAppBar(),
+      appBar: _buildAppBar(className), // Pass className to AppBar
       body: SafeArea(
         child: Obx(() {
           if (controller.isLoading.value) {
             return _buildShimmerList();
           } else if (controller.errorMessage.isNotEmpty) {
-            return _buildErrorState(controller.errorMessage.value,
-                () => controller.fetchStudents());
-          } else if (controller.students.isEmpty) { // <--- CORRECTED: controller.students
-            return _buildEmptyState();
+            return _buildErrorState(
+                controller.errorMessage.value,
+                () => controller.fetchStudents(
+                    classId: classId)); // Pass classId on retry
+          } else if (controller.students.isEmpty) {
+            //
+            return _buildEmptyState(
+                className); // Pass className to empty state message
           } else {
             return ListView.separated(
               padding: const EdgeInsets.all(16.0),
-              itemCount: controller.students.length, // <--- CORRECTED: controller.students
+              itemCount: controller.students.length, //
               separatorBuilder: (context, index) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
-                final student = controller.students[index]; // <--- CORRECTED: controller.students
+                final student = controller.students[index]; //
                 return _buildStudentCard(student);
               },
             );
@@ -42,7 +52,8 @@ class StudentListScreen extends StatelessWidget {
     );
   }
 
-  AppBar _buildAppBar() {
+  AppBar _buildAppBar(String? className) {
+    // Modified to accept className
     return AppBar(
       backgroundColor: AppColors.primaryBlue,
       elevation: 0,
@@ -51,9 +62,11 @@ class StudentListScreen extends StatelessWidget {
             color: Colors.white, size: 20),
         onPressed: () => Get.back(),
       ),
-      title: const Text(
-        "ALL STUDENTS",
-        style: TextStyle(
+      title: Text(
+        className != null
+            ? "STUDENTS IN ${className.toUpperCase()}"
+            : "ALL STUDENTS", // Dynamic title
+        style: const TextStyle(
           color: Colors.white,
           fontFamily: AppFonts.fontFamily,
           fontWeight: FontWeight.w600,
@@ -65,7 +78,8 @@ class StudentListScreen extends StatelessWidget {
   }
 
   Widget _buildStudentCard(Student student) {
-    final String displayName = student.displayName; // Correctly access displayName getter
+    final String displayName =
+        student.displayName; // Correctly access displayName getter
 
     return Container(
       decoration: BoxDecoration(
@@ -83,9 +97,10 @@ class StudentListScreen extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: () {
-          print('Tapped on student: $displayName');
-          // You can navigate to a student detail screen here if needed
-          // Get.toNamed(AppRoutes.studentDetail, arguments: student.id);
+          print('Tapped on student: $displayName (ID: ${student.id})');
+          // Navigate to StudentInfoScreen, passing student.id as argument
+          Get.toNamed(AppRoutes.studentInfo,
+              arguments: {'studentId': student.id});
         },
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -117,7 +132,7 @@ class StudentListScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Gender: ${student.gender}',
+                      'Gender: ${student.gender}', //
                       style: const TextStyle(
                         fontSize: 14,
                         color: AppColors.mediumText,
@@ -129,7 +144,7 @@ class StudentListScreen extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(
-                          'Phone: ${student.phoneNumber!}', // <--- Access as non-nullable after check
+                          'Phone: ${student.phoneNumber!}', //
                           style: const TextStyle(
                             fontSize: 14,
                             color: AppColors.mediumText,
@@ -141,7 +156,7 @@ class StudentListScreen extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(
-                          'Email: ${student.email!}', // <--- Access as non-nullable after check
+                          'Email: ${student.email!}', //
                           style: const TextStyle(
                             fontSize: 14,
                             color: AppColors.mediumText,
@@ -259,7 +274,8 @@ class StudentListScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(String? className) {
+    // Modified to accept className
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -269,9 +285,11 @@ class StudentListScreen extends StatelessWidget {
             Icon(Icons.person_off_rounded,
                 size: 150, color: AppColors.mediumText.withOpacity(0.5)),
             const SizedBox(height: 24),
-            const Text(
-              'No Students Found',
-              style: TextStyle(
+            Text(
+              className != null
+                  ? 'No Students Found in $className'
+                  : 'No Students Found', // Dynamic empty state message
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: AppColors.darkText,
@@ -280,9 +298,11 @@ class StudentListScreen extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
-            const Text(
-              'There are no student records available at the moment.',
-              style: TextStyle(
+            Text(
+              className != null
+                  ? 'There are no student records available for $className at the moment.'
+                  : 'There are no student records available at the moment.',
+              style: const TextStyle(
                 fontSize: 14,
                 color: AppColors.mediumText,
                 fontFamily: AppFonts.fontFamily,

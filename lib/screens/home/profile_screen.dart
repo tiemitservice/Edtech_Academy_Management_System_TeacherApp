@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:school_management_system_teacher_app/utils/app_colors.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:school_management_system_teacher_app/controllers/auth_controller.dart';
 import 'package:school_management_system_teacher_app/Widget/super_profile_picture.dart';
@@ -48,7 +49,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   static const Color _profileAvatarDefaultTextColor = Colors.white;
 
   // --- Font Family Constant ---
-  static const String _fontFamily = 'KantumruyPro';
+  static const String _fontFamily = AppFonts.fontFamily;
 
   @override
   void initState() {

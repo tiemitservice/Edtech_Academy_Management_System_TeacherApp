@@ -7,6 +7,7 @@ import 'package:flutter/scheduler.dart';
 
 // Assuming you have this file and controller.
 import 'package:school_management_system_teacher_app/controllers/auth_controller.dart';
+import 'package:school_management_system_teacher_app/utils/app_colors.dart';
 
 /// A screen to be shown as a modal bottom sheet for editing an existing permission request.
 class EditPermissionSheetScreen extends StatefulWidget {
@@ -34,7 +35,7 @@ class _EditPermissionSheetScreenState extends State<EditPermissionSheetScreen> {
   static const Color _lightBlueAccent = Color(0xFF5B9BD5);
 
   // --- Font Family Constant ---
-  static const String _fontFamily = 'KantumruyPro';
+  static const String _fontFamily =AppFonts.fontFamily;
 
   final TextEditingController _dateController = TextEditingController();
   final TextEditingController _reasonController = TextEditingController();

@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:school_management_system_teacher_app/screens/home/check_attendence_screen.dart';
 import 'package:school_management_system_teacher_app/screens/home/student_permissions_screen.dart';
+import 'package:school_management_system_teacher_app/utils/app_colors.dart';
 // If you uncommented StudentScoresListScreen before, make sure it's uncommented here too:
 
 class TeacherManagementScreen extends StatefulWidget {
@@ -35,7 +36,7 @@ class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
   static const Color _borderGrey = Color(0xFFE0E6ED);
 
   // --- Font Family Constant ---
-  static const String _fontFamily = 'KantumruyPro';
+  static const String _fontFamily = AppFonts.fontFamily;
 
   @override
   Widget build(BuildContext context) {

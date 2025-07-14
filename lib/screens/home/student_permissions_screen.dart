@@ -471,7 +471,7 @@ class StudentPermissionCard extends StatelessWidget {
                   border: Border.all(color: AppColors.successGreen),
                 ),
                 child: Text(
-                  "Already Approved",
+                  "Already Accepted",
                   style: TextStyle(
                       color: AppColors.successGreen,
                       fontWeight: FontWeight.bold,
@@ -483,18 +483,11 @@ class StudentPermissionCard extends StatelessWidget {
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                decoration: BoxDecoration(
-                  color: AppColors.declineRed.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.declineRed),
-                ),
-                child: Text(
-                  "Already Denied",
-                  style: TextStyle(
-                      color: AppColors.declineRed,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: AppFonts.fontFamily),
-                ),
+                // decoration: BoxDecoration(
+                //   color: AppColors.declineRed.withOpacity(0.1),
+                //   borderRadius: BorderRadius.circular(12),
+                //   border: Border.all(color: AppColors.declineRed),
+                // ),
               ),
           ],
         ),

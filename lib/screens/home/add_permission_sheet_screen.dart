@@ -6,6 +6,7 @@ import 'dart:convert';
 
 // Assuming you have this file and controller.
 import 'package:school_management_system_teacher_app/controllers/auth_controller.dart';
+import 'package:school_management_system_teacher_app/utils/app_colors.dart';
 
 /// A screen to be shown as a modal bottom sheet for adding a new permission request.
 class AddPermissionSheetScreen extends StatefulWidget {
@@ -29,7 +30,7 @@ class _AddPermissionSheetScreenState extends State<AddPermissionSheetScreen> {
 
   // --- Font Family Constant ---
   // Define the font family name as a constant to use it everywhere.
-  static const String _fontFamily = 'KantumruyPro';
+  static const String _fontFamily = AppFonts.fontFamily;
 
   final TextEditingController _dateController = TextEditingController();
   final TextEditingController _reasonController = TextEditingController();

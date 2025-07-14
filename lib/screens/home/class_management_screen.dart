@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:school_management_system_teacher_app/routes/app_routes.dart';
+import 'package:school_management_system_teacher_app/utils/app_colors.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:school_management_system_teacher_app/controllers/auth_controller.dart';
 
@@ -157,7 +158,7 @@ class _ClassManagementScreenState extends State<ClassManagementScreen>
   static final Color _skeletonHighlightColor = Colors.grey.shade100;
 
   // --- Font Family Constant ---
-  static const String _fontFamily = 'KantumruyPro';
+  static const String _fontFamily = AppFonts.fontFamily;
 
   @override
   void initState() {
