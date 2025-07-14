@@ -504,7 +504,7 @@ class StudentPermissionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final studentName = permission.studentDetails?.name ?? 'Unknown Student';
+    final studentName = permission.studentDetails?.engName ?? 'Unknown Student';
     final studentGender = permission.studentDetails?.gender ?? 'N/A';
     final studentAvatarUrl = permission.studentDetails?.avatarUrl;
 

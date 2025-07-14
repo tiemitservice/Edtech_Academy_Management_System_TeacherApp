@@ -52,7 +52,7 @@ class NotificationController extends GetxController {
   // Helper getter to format the count for the badge
   String get formattedPendingCount {
     if (pendingPermissionCount.value > 9) {
-      return '9+'; // Changed to '9+' as per request
+      return '9+';
     }
     return pendingPermissionCount.value.toString();
   }

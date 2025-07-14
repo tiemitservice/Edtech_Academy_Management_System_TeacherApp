@@ -462,7 +462,7 @@ class _HomeScreenState extends State<HomeScreen>
                         Tween(begin: 0.0, end: 0.25).animate(_arrowController),
                     child: Icon(
                       isExpanded
-                          ? Icons.keyboard_arrow_up_rounded
+                          ? Icons.arrow_forward_ios_rounded
                           : Icons.arrow_forward_ios_rounded,
                       size: 20,
                       color: _mediumText,

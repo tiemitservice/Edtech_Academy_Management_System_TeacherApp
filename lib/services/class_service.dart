@@ -1,71 +1,9 @@
 // lib/services/class_service.dart
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:school_management_system_teacher_app/models/student.dart'; // Import Student model
+import 'package:school_management_system_teacher_app/models/class.dart'; // <--- IMPORTANT: This imports TeacherClass and Subject
 
-// Define a simple Class model if you don't have one
-class TeacherClass {
-  final String id;
-  final String name;
-  final String subjectId;
-  final String subjectName;
-  final List<Student> students; // List of actual Student objects
-  final String staffId; // Added staffId as it's in your class API response
-
-  TeacherClass({
-    required this.id,
-    required this.name,
-    required this.subjectId,
-    required this.subjectName,
-    required this.students,
-    required this.staffId, // Added to constructor
-  });
-
-  factory TeacherClass.fromJson(
-      Map<String, dynamic> json, String resolvedSubjectName) {
-    final List<dynamic> studentsRaw = json['students'] as List<dynamic>? ?? [];
-    final List<Student> students = studentsRaw.map((s) {
-      // Ensure 'student' key exists and is a Map before parsing
-      if (s is Map<String, dynamic> &&
-          s.containsKey('student') &&
-          s['student'] is Map<String, dynamic>) {
-        return Student.fromJson(s['student'] as Map<String, dynamic>);
-      }
-      print('Warning: Invalid student data structure in class API: $s');
-      // Return a dummy student or handle error as appropriate
-      return Student(
-          id: 'unknown',
-          name: 'Invalid Student',
-          gender: 'N/A',
-          avatarUrl: null);
-    }).toList();
-
-    return TeacherClass(
-      id: json['_id'] as String? ?? 'Unknown ID',
-      name: json['name'] as String? ?? 'Unnamed Class',
-      subjectId: json['subject'] as String? ?? '',
-      subjectName: resolvedSubjectName,
-      students: students,
-      staffId: json['staff'] as String? ?? '', // Parse staffId
-    );
-  }
-}
-
-/// Represents a Subject.
-class Subject {
-  final String id;
-  final String name;
-
-  Subject({required this.id, required this.name});
-
-  factory Subject.fromJson(Map<String, dynamic> json) {
-    return Subject(
-      id: json['_id'] as String,
-      name: json['name'] as String,
-    );
-  }
-}
-
+/// A service class for fetching class data from the API.
 class ClassService {
   final String _classesBaseUrl =
       'https://edtech-academy-management-system-server.onrender.com/api/classes';

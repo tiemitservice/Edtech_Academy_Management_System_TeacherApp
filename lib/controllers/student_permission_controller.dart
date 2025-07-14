@@ -4,22 +4,21 @@ import 'package:flutter/material.dart'; // Import for Get.snackbar, Colors
 import 'package:school_management_system_teacher_app/models/permission_item.dart';
 import 'package:school_management_system_teacher_app/models/student.dart';
 import 'package:school_management_system_teacher_app/services/student_permission_service.dart';
-import 'package:school_management_system_teacher_app/services/student_repository.dart'; // <--- NEW IMPORT
+import 'package:school_management_system_teacher_app/services/student_repository.dart';
 import 'package:school_management_system_teacher_app/controllers/auth_controller.dart';
 import 'package:school_management_system_teacher_app/utils/app_colors.dart';
 
 class StudentPermissionController extends GetxController {
   // Services
-  final StudentPermissionService _permissionService =
-      Get.find<StudentPermissionService>();
-  final StudentRepository _studentRepository =
-      Get.find<StudentRepository>(); // <--- NEW DEPENDENCY
+  final StudentPermissionService _permissionService = Get.find<StudentPermissionService>();
+  final StudentRepository _studentRepository = Get.find<StudentRepository>();
   final AuthController _authController = Get.find<AuthController>();
 
   // Reactive state variables
   final RxList<PermissionItem> studentPermissions = <PermissionItem>[].obs;
   final RxBool isLoading = true.obs;
   final RxString errorMessage = ''.obs;
+
   // Reactive variables for permission counts
   final RxInt totalPermissions = 0.obs;
   final RxInt pendingPermissions = 0.obs;
@@ -33,8 +32,7 @@ class StudentPermissionController extends GetxController {
     _studentRepository.fetchAllStudents().then((_) {
       fetchStudentPermissions(); // Then fetch permissions
     }).catchError((e) {
-      errorMessage.value =
-          "Failed to load student data: ${e.toString().replaceFirst('Exception: ', '')}";
+      errorMessage.value = "Failed to load student data: ${e.toString().replaceFirst('Exception: ', '')}";
       isLoading.value = false;
       print('Error pre-fetching all students: $e');
     });
@@ -50,13 +48,10 @@ class StudentPermissionController extends GetxController {
         .where((p) => p.status.toLowerCase() == 'approved')
         .length;
     deniedPermissions.value = studentPermissions
-        .where((p) =>
-            p.status.toLowerCase() == 'denied' ||
-            p.status.toLowerCase() == 'rejected')
+        .where((p) => p.status.toLowerCase() == 'denied' || p.status.toLowerCase() == 'rejected')
         .length;
     print('--- PERMISSION COUNTS UPDATED ---');
-    print(
-        'Total: ${totalPermissions.value}, Pending: ${pendingPermissions.value}, Approved: ${approvedPermissions.value}, Denied: ${deniedPermissions.value}');
+    print('Total: ${totalPermissions.value}, Pending: ${pendingPermissions.value}, Approved: ${approvedPermissions.value}, Denied: ${deniedPermissions.value}');
     print('-------------------------------');
   }
 
@@ -85,8 +80,7 @@ class StudentPermissionController extends GetxController {
       final List<PermissionItem> filteredPermissions = allPermissions
           .where((p) => p.sentToStaffId == teacherStaffId)
           .toList();
-      print(
-          'Filtered to ${filteredPermissions.length} permissions for this teacher.');
+      print('Filtered to ${filteredPermissions.length} permissions for this teacher.');
 
       if (filteredPermissions.isEmpty) {
         studentPermissions.assignAll([]); // Clear list if no permissions found
@@ -99,24 +93,20 @@ class StudentPermissionController extends GetxController {
       // 3. Enrich filtered permissions with student details using StudentRepository
       final List<PermissionItem> enrichedPermissions = [];
       for (var permission in filteredPermissions) {
-        final Student? student =
-            await _studentRepository.getStudentById(permission.studentId);
+        final Student? student = await _studentRepository.getStudentById(permission.studentId);
         if (student != null) {
           enrichedPermissions.add(permission.copyWith(studentDetails: student));
-          print(
-              '  Permission ID: ${permission.id} - Student details found: ${student.name} (ID: ${student.id})');
+          print('  Permission ID: ${permission.id} - Student details found: ${student.engName} (ID: ${student.id})');
         } else {
           // If student details are not found, still add the permission but with null studentDetails
           enrichedPermissions.add(permission.copyWith(studentDetails: null));
-          print(
-              '  Permission ID: ${permission.id} - Student details NOT FOUND in repository for ID: ${permission.studentId}');
+          print('  Permission ID: ${permission.id} - Student details NOT FOUND in repository for ID: ${permission.studentId}');
         }
       }
 
       studentPermissions.assignAll(enrichedPermissions);
       _updatePermissionCounts(); // Update counts after data is loaded
-      print(
-          'Finished enriching permissions. Total permissions in RxList: ${studentPermissions.length}');
+      print('Finished enriching permissions. Total permissions in RxList: ${studentPermissions.length}');
     } catch (e) {
       errorMessage.value = e.toString().replaceFirst('Exception: ', '');
       print('!!! ERROR in fetchStudentPermissions: ${errorMessage.value}');
@@ -128,8 +118,7 @@ class StudentPermissionController extends GetxController {
   /// Updates the status of a specific permission and refreshes the list.
   Future<void> updatePermissionStatus(
       String permissionId, String newStatus, String classId) async {
-    print(
-        'Attempting to update permission status for $permissionId to $newStatus');
+    print('Attempting to update permission status for $permissionId to $newStatus');
     try {
       await _permissionService.updatePermissionStatus(permissionId, newStatus);
 
@@ -138,8 +127,7 @@ class StudentPermissionController extends GetxController {
         studentPermissions[index] =
             studentPermissions[index].copyWith(status: newStatus.toLowerCase());
         _updatePermissionCounts(); // Recalculate counts after status change
-        print(
-            'Permission $permissionId status updated to $newStatus locally and counts recalculated.');
+        print('Permission $permissionId status updated to $newStatus locally and counts recalculated.');
       }
 
       Get.snackbar(

@@ -3,22 +3,25 @@ import 'package:get/get.dart';
 import 'package:school_management_system_teacher_app/routes/app_routes.dart';
 import 'package:school_management_system_teacher_app/controllers/auth_controller.dart';
 import 'package:school_management_system_teacher_app/controllers/student_permission_controller.dart';
+import 'package:school_management_system_teacher_app/controllers/notification_controller.dart';
+import 'package:school_management_system_teacher_app/controllers/student_list_controller.dart'; // <--- NEW IMPORT
 import 'package:school_management_system_teacher_app/services/student_permission_service.dart';
-import 'package:school_management_system_teacher_app/services/class_service.dart';
-import 'package:school_management_system_teacher_app/services/student_repository.dart'; // <--- NEW IMPORT
+// import 'package:school_management_system_teacher_app/services/class_service.dart';
+import 'package:school_management_system_teacher_app/services/student_repository.dart';
+import 'package:school_management_system_teacher_app/services/student_list_service.dart'; // <--- NEW IMPORT
 
 // Main binding to initialize all necessary controllers and services
 class MainBinding extends Bindings {
   @override
   void dependencies() {
-    // Services
     Get.lazyPut(() => StudentPermissionService());
-    Get.lazyPut(() => ClassService());
-    Get.lazyPut(() => StudentRepository()); // <--- NEW BINDING
+    Get.lazyPut(() => StudentRepository());
+    Get.lazyPut(() => StudentListService());
 
-    // Controllers
-    Get.put(AuthController()); // AuthController should be available for staffId
-    Get.put(StudentPermissionController()); // StudentPermissionController
+    Get.put(AuthController());
+    Get.put(StudentPermissionController());
+    Get.lazyPut(() => NotificationController());
+    Get.lazyPut(() => StudentListController());
   }
 }
 
@@ -38,12 +41,12 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
         fontFamily:
-            'NotoSerifKhmer', // Ensure this font is correctly configured in pubspec.yaml
+            'KantumruyPro', // Ensure this font is correctly configured in pubspec.yaml
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       initialBinding: MainBinding(), // Initialize all dependencies
-      initialRoute: AppRoutes
-          .splash, // Set StudentPermissionsScreen as the initial route for testing
+      initialRoute:
+          AppRoutes.home, // Set to home or your desired starting screen
       getPages: AppRoutes.routes, // Your defined routes
     );
   }

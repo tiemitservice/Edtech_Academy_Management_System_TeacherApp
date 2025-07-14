@@ -7,11 +7,9 @@ import 'package:school_management_system_teacher_app/models/student.dart';
 /// A repository to fetch and cache student data.
 /// This helps avoid multiple API calls for the same student.
 class StudentRepository extends GetxService {
-  final String _baseUrl =
-      'https://edtech-academy-management-system-server.onrender.com/api/students';
+  final String _baseUrl = 'https://edtech-academy-management-system-server.onrender.com/api/students';
   final Map<String, Student> _studentsCache = {}; // Cache student data by ID
-  final RxBool _isFetchingAllStudents =
-      false.obs; // To prevent multiple simultaneous fetches
+  final RxBool _isFetchingAllStudents = false.obs; // To prevent multiple simultaneous fetches
 
   /// Fetches all students from the API and populates the cache.
   Future<void> fetchAllStudents() async {
@@ -34,11 +32,9 @@ class StudentRepository extends GetxService {
           final student = Student.fromJson(rawStudent);
           _studentsCache[student.id] = student;
         }
-        print(
-            'Successfully fetched and cached ${_studentsCache.length} students.');
+        print('Successfully fetched and cached ${_studentsCache.length} students.');
       } else {
-        print(
-            'Failed to load all students: ${response.statusCode} - ${response.body}');
+        print('Failed to load all students: ${response.statusCode} - ${response.body}');
         throw Exception('Failed to load all students: ${response.statusCode}');
       }
     } catch (e) {

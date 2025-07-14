@@ -217,8 +217,7 @@ class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
           title: "Student's List",
           subtitle: "View all my Student's in each classes",
           onTap: () {
-            print("Student's List tapped");
-            // TODO: Navigate to Student List Screen
+            Get.toNamed('/student-list');
           },
         ),
       ],

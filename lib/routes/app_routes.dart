@@ -8,6 +8,7 @@ import 'package:school_management_system_teacher_app/screens/home/edit_profile_s
 import 'package:school_management_system_teacher_app/screens/home/home_screen.dart';
 import 'package:school_management_system_teacher_app/screens/home/my_permission_screen.dart';
 import 'package:school_management_system_teacher_app/screens/home/profile_screen.dart';
+import 'package:school_management_system_teacher_app/screens/home/student_list_screen.dart';
 import 'package:school_management_system_teacher_app/screens/home/student_permissions_screen.dart';
 import 'package:school_management_system_teacher_app/screens/home/student_score_input_screen.dart';
 import 'package:school_management_system_teacher_app/screens/home/student_scores_list_screen.dart';
@@ -33,6 +34,7 @@ class AppRoutes {
   static const String studentScoresList = '/student-scores-list';
   static const String studentPermission = '/student-permission';
   static const String myPermission = '/my-permission';
+  static const String studentList = '/student-list';
 
   // Define the list of GetPage routes
   static final List<GetPage> routes = [
@@ -118,6 +120,10 @@ class AppRoutes {
     GetPage(
       name: myPermission,
       page: () => MyPermissionScreen(), // Assumes no arguments are needed
+    ),
+    GetPage(
+      name: studentList, // <--- REGISTER NEW ROUTE
+      page: () => const StudentListScreen(),
     ),
   ];
 }
