@@ -1,5 +1,7 @@
 // tiemitservice/edtech_academy_management_system_teacherapp/Edtech_Academy_Management_System_TeacherApp-a41b5c2bda2f109f4f2f39b45e2ddf1ef6a9d71c/lib/routes/app_routes.dart
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:school_management_system_teacher_app/bindings/student_info_binding.dart';
 import 'package:school_management_system_teacher_app/screens/home/check_attendence_screen.dart';
 import 'package:school_management_system_teacher_app/onboarding/onboarding_screen.dart';
 import 'package:school_management_system_teacher_app/screens/auth/forgot_password_screen.dart';
@@ -17,8 +19,6 @@ import 'package:school_management_system_teacher_app/screens/home/teacher_manage
 import 'package:school_management_system_teacher_app/screens/splash_screen.dart';
 import 'package:school_management_system_teacher_app/screens/home/student_info_screen.dart';
 import 'package:school_management_system_teacher_app/controllers/student_list_controller.dart';
-import 'package:school_management_system_teacher_app/controllers/student_info_controller.dart';
-import 'package:school_management_system_teacher_app/services/student_info_service.dart'; // Import StudentInfoService
 
 class AppRoutes {
   static const String splash = '/';
@@ -102,6 +102,8 @@ class AppRoutes {
       page: () => StudentListScreen(
         classId: Get.arguments?['classId'],
         className: Get.arguments?['className'],
+        subjectName: Get.arguments['subjectName'],
+        studentsCount: Get.arguments['studentsCount'],
       ),
       binding: BindingsBuilder(() {
         Get.lazyPut<StudentListController>(
@@ -110,16 +112,18 @@ class AppRoutes {
     ),
     GetPage(
       name: studentInfo,
-      page: () => StudentInfoScreen(studentId: Get.arguments['studentId']),
-      binding: BindingsBuilder(() {
-        // Ensure StudentInfoService is available within this route's scope
-        // If it's already put globally, GetX won't create a new one.
-        // This acts as a safeguard for route-specific dependencies.
-        Get.lazyPut(
-            () => StudentInfoService()); // Re-register for this route's scope
-        Get.put<StudentInfoController>(
-            StudentInfoController(studentId: Get.arguments['studentId']));
-      }),
+      page: () {
+        final String? studentId = Get.arguments['studentId'] as String?;
+        if (studentId == null) {
+          // You can redirect or show an error here
+          Get.snackbar('Error', 'Student ID not provided for student info screen.',
+              snackPosition: SnackPosition.BOTTOM);
+          return const Scaffold(body: Center(child: Text('Student ID missing!')));
+        }
+        return StudentInfoScreen(studentId: studentId);
+      },
+      binding: StudentInfoBinding(), // <--- Use the dedicated binding here
+      // No need for a BindingsBuilder directly in GetPage when using a separate class
     ),
   ];
 }

@@ -1,43 +1,70 @@
-// tiemitservice/edtech_academy_management_system_teacherapp/Edtech_Academy_Management_System_TeacherApp-a41b5c2bda2f109f4f2f39b45e2ddf1ef6a9d71c/lib/services/student_list_service.dart
-import 'package:http/http.dart' as http; // Import the http package
-import 'dart:convert'; // For json.decode
+// lib/services/student_list_service.dart
+import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:school_management_system_teacher_app/models/student.dart';
 
-class StudentListService {
-  // Set the base URL for your API
-  final String _baseUrl = 'https://edtech-academy-management-system-server.onrender.com/api';
+const String _apiBaseUrl =
+    'https://edtech-academy-management-system-server.onrender.com/api';
 
-  /// Fetches the list of students from the API.
-  /// If classId is provided, it filters the students client-side based on their 'student_type'.
-  Future<List<Student>> fetchAllStudents({String? classId}) async {
-    final String url = '$_baseUrl/students'; // The API endpoint for all students
+/// A data class to hold the list of students and their total count for a specific class.
+class StudentsByClassResult {
+  final List<Student> students;
+  final int totalStudentsCount;
 
+  StudentsByClassResult(
+      {required this.students, required this.totalStudentsCount});
+}
+
+class StudentListService extends GetxService {
+  /// Fetches a list of students for a specific class, filtered by classId and staffId.
+  /// Returns a StudentsByClassResult containing the list of students and their count.
+  Future<StudentsByClassResult> fetchStudentsForClass({
+    required String classId,
+    required String staffId, // This parameter is crucial and correctly used
+  }) async {
     try {
-      final response = await http.get(Uri.parse(url));
+      // Fetch from classes API
+      final response = await http.get(Uri.parse('$_apiBaseUrl/classes'));
 
       if (response.statusCode == 200) {
-        // Parse the JSON response
-        Map<String, dynamic> jsonResponse = json.decode(response.body);
-        // The actual student data is inside the 'data' key of the JSON response
-        List<dynamic> studentData = jsonResponse['data'];
+        final Map<String, dynamic> responseData = json.decode(response.body);
+        final List<dynamic> allClassesData =
+            responseData['data']; // Access the 'data' array
 
-        // Convert the list of JSON objects into a list of Student objects
-        List<Student> allFetchedStudents = studentData.map((json) => Student.fromJson(json)).toList();
+        // Find the specific class that matches both classId and staffId
+        final classJson = allClassesData.firstWhere(
+          (c) =>
+              c['_id'] == classId &&
+              c['staff'] == staffId, // Filtering by both IDs
+          orElse: () => throw Exception(
+              'Class not found or teacher not assigned to this class.'),
+        );
 
-        // If a classId is provided, filter the students on the client-side
-        if (classId != null && classId.isNotEmpty) {
-          return allFetchedStudents.where((student) => student.classId == classId).toList();
-        } else {
-          // If no classId, return all students
-          return allFetchedStudents;
+        final List<Student> studentsInClass = [];
+        if (classJson['students'] is List) {
+          for (var studentEntry in classJson['students']) {
+            if (studentEntry['student'] is Map<String, dynamic>) {
+              // Parse the nested 'student' object into your Student model
+              final Student student = Student.fromJson(studentEntry['student']);
+              studentsInClass.add(student);
+            }
+          }
         }
+
+        // Return the students and their count
+        return StudentsByClassResult(
+          students: studentsInClass,
+          totalStudentsCount: studentsInClass.length,
+        );
       } else {
-        // If the server did not return a 200 OK response, throw an exception.
-        throw Exception('Failed to load students: ${response.statusCode} - ${response.body}');
+        throw Exception(
+            'Failed to load class list: Status ${response.statusCode}');
       }
     } catch (e) {
-      // Catch any network-related errors
-      throw Exception('Failed to connect to the student API: $e');
+      print('Error fetching students from classes API: $e');
+      throw Exception(
+          'Failed to load student data: ${e.toString().replaceFirst('Exception: ', '')}');
     }
   }
 }

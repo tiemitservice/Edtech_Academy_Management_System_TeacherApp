@@ -10,6 +10,19 @@ import 'package:school_management_system_teacher_app/screens/home/add_permission
 import 'package:school_management_system_teacher_app/screens/home/edit_permission_sheet_screen.dart';
 import 'package:school_management_system_teacher_app/controllers/permission_controller.dart'; // Import the PermissionController
 
+class AppColors {
+  static const Color primaryBlue = Color(0xFF1469C7);
+  static const Color lightBackground = Color(0xFFF7F9FC);
+  static const Color cardBackground = Colors.white;
+  static const Color darkText = Color(0xFF2C3E50);
+  static const Color mediumText = Color(0xFF7F8C8D);
+  static const Color borderGrey = Color(0xFFE0E6ED);
+  static const Color successGreen = Color(0xFF27AE60);
+  static const Color declineRed = Color(0xFFE74C3C);
+  static const Color pendingOrange = Color(0xFFF39C12); // Existing orange
+  static const Color warningYellow = Color(0xFFF1C40F); // New warning color
+}
+
 /// A screen for a user (student or teacher) to view and manage their own
 /// permission requests.
 /// This is now a StatelessWidget, as all mutable state is managed by PermissionController.
@@ -26,13 +39,14 @@ class MyPermissionScreen extends StatelessWidget {
   static const Color _successGreen = Color(0xFF27AE60);
   static const Color _declineRed = Color(0xFFE74C3C);
   static const Color _pendingOrange = Color(0xFFF39C12);
+  // Add the new warning color
+  static const Color _warningYellow =
+      AppColors.warningYellow; // Use from AppColors
   static const double _cardPadding = 20.0;
   static const double _listPadding = 16.0;
   static const double _bottomButtonPadding = 16.0;
 
   // --- Font Family Constant ---
-  // Define the font family name as a constant for consistent use.
-  // This should match the 'family' name in your pubspec.yaml.
   static const String _fontFamily = AppFonts.fontFamily;
 
   @override
@@ -95,7 +109,7 @@ class MyPermissionScreen extends StatelessWidget {
         "My Permissions",
         style: TextStyle(
           color: Colors.white,
-          fontFamily: _fontFamily, // Apply NotoSerifKhmer
+          fontFamily: _fontFamily,
           fontWeight: FontWeight.w600,
           fontSize: 17,
         ),
@@ -105,8 +119,6 @@ class MyPermissionScreen extends StatelessWidget {
   }
 
   Widget _buildSkeletonLoader() {
-    // Shimmer itself doesn't need font changes, but its underlying widgets might.
-    // However, for a skeleton loader, text isn't actually rendered.
     return Shimmer.fromColors(
       baseColor: _borderGrey.withOpacity(0.5),
       highlightColor: Colors.white.withOpacity(0.8),
@@ -184,7 +196,7 @@ class MyPermissionScreen extends StatelessWidget {
               style: TextStyle(
                 color: _darkText,
                 fontSize: 16,
-                fontFamily: _fontFamily, // Apply NotoSerifKhmer
+                fontFamily: _fontFamily,
               ),
             ),
             const SizedBox(height: 24),
@@ -193,9 +205,7 @@ class MyPermissionScreen extends StatelessWidget {
               icon: const Icon(Icons.refresh_rounded, color: Colors.white),
               label: Text(
                 'Retry',
-                style: TextStyle(
-                    fontFamily: _fontFamily, // Apply NotoSerifKhmer
-                    color: Colors.white),
+                style: TextStyle(fontFamily: _fontFamily, color: Colors.white),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: _primaryBlue,
@@ -224,7 +234,7 @@ class MyPermissionScreen extends StatelessWidget {
             style: TextStyle(
               color: _mediumText,
               fontSize: 16,
-              fontFamily: _fontFamily, // Apply NotoSerifKhmer
+              fontFamily: _fontFamily,
             ),
           ),
           const SizedBox(height: 100),
@@ -234,7 +244,10 @@ class MyPermissionScreen extends StatelessWidget {
   }
 
   Widget _buildHeader(int total, int pending, bool isLoading) {
-    final PermissionController controller = Get.find<PermissionController>();
+    // The getFontFamily is passed down, but not used directly here.
+    // It's usually used for custom TextStyles where the font family is not hardcoded.
+    // Since _fontFamily is a static constant in this class, it's directly accessible.
+    // However, keeping getFontFamily parameter aligns with existing code structure.
     return Container(
       color: _primaryBlue,
       child: Container(
@@ -247,8 +260,8 @@ class MyPermissionScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Flexible(
-                child: _buildStatColumn(
-                    "Total", total, isLoading, controller.getFontFamily)),
+                child: _buildStatColumn("Total", total, isLoading,
+                    _fontFamily)), // Pass _fontFamily directly
             SvgPicture.asset(
               'assets/images/teacher_management/permission.svg',
               height: 100,
@@ -256,25 +269,40 @@ class MyPermissionScreen extends StatelessWidget {
               fit: BoxFit.contain,
             ),
             Flexible(
-                child: _buildStatColumn(
-                    "Pending", pending, isLoading, controller.getFontFamily)),
+                child: _buildStatColumn("Pending", pending, isLoading,
+                    _fontFamily)), // Pass _fontFamily directly
           ],
         ),
       ),
     );
   }
 
+  // --- MODIFIED METHOD ---
   Widget _buildStatColumn(
-      String label, int value, bool isLoading, Function(String) getFontFamily) {
+      String label, int value, bool isLoading, String fontFamily) {
+    Color valueColor = _darkText; // Default color
+
+    // Apply color logic only for the "Pending" label
+    if (label == "Pending") {
+      if (value >= 0 && value <= 5) {
+        valueColor = _successGreen;
+      } else if (value >= 6 && value <= 9) {
+        valueColor = _warningYellow; // Use the new warning color
+      } else if (value >= 10) {
+        valueColor = _declineRed;
+      }
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
           label,
           style: TextStyle(
-              color: _mediumText,
-              fontFamily: _fontFamily, // Apply NotoSerifKhmer
-              fontSize: 14),
+            color: _mediumText,
+            fontFamily: fontFamily,
+            fontSize: 14,
+          ),
         ),
         const SizedBox(height: 4),
         Text(
@@ -282,8 +310,9 @@ class MyPermissionScreen extends StatelessWidget {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.w700,
-            color: _darkText,
-            fontFamily: _fontFamily, // Apply NotoSerifKhmer
+            // Apply the dynamic color here
+            color: valueColor,
+            fontFamily: fontFamily,
           ),
         ),
       ],
@@ -368,7 +397,7 @@ class MyPermissionScreen extends StatelessWidget {
                             fontWeight: FontWeight.w600,
                             fontSize: 15,
                             color: _darkText,
-                            fontFamily: _fontFamily, // Apply NotoSerifKhmer
+                            fontFamily: _fontFamily,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -379,7 +408,7 @@ class MyPermissionScreen extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 13,
                             color: _mediumText,
-                            fontFamily: _fontFamily, // Apply NotoSerifKhmer
+                            fontFamily: _fontFamily,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -403,7 +432,7 @@ class MyPermissionScreen extends StatelessWidget {
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                             color: statusColor,
-                            fontFamily: _fontFamily, // Apply NotoSerifKhmer
+                            fontFamily: _fontFamily,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -446,7 +475,7 @@ class MyPermissionScreen extends StatelessWidget {
             fontWeight: FontWeight.w700,
             fontSize: 16,
             color: _darkText,
-            fontFamily: _fontFamily, // Apply NotoSerifKhmer
+            fontFamily: _fontFamily,
           ),
         ),
         const SizedBox(height: 16),
@@ -495,7 +524,7 @@ class MyPermissionScreen extends StatelessWidget {
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: _primaryBlue,
-                    fontFamily: _fontFamily, // Apply NotoSerifKhmer
+                    fontFamily: _fontFamily,
                   ),
                 ),
               ),
@@ -525,14 +554,14 @@ class MyPermissionScreen extends StatelessWidget {
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     color: _darkText,
-                    fontFamily: _fontFamily, // Apply NotoSerifKhmer
+                    fontFamily: _fontFamily,
                   ),
                 ),
                 TextSpan(
                   text: ' $value',
                   style: TextStyle(
                     color: _mediumText,
-                    fontFamily: _fontFamily, // Apply NotoSerifKhmer
+                    fontFamily: _fontFamily,
                   ),
                 ),
               ],
@@ -577,7 +606,7 @@ class MyPermissionScreen extends StatelessWidget {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              fontFamily: _fontFamily, // Apply NotoSerifKhmer
+              fontFamily: _fontFamily,
             ),
           ),
         ),

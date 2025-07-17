@@ -28,6 +28,8 @@ dependencies:
   syncfusion_flutter_datepicker: ^29.1.38
   socket_io_client: ^3.1.2
   web_socket_channel: ^3.0.3
+  url_launcher: ^6.3.1
+  phoenix_widgets: ^1.21.0
 
 flutter_icons:
   android: true

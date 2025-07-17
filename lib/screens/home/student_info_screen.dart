@@ -1,12 +1,14 @@
-// tiemitservice/edtech_academy_management_system_teacherapp/Edtech_Academy_Management_System_TeacherApp-a41b5c2bda2f109f4f2f39b45e2ddf1ef6a9d71c/lib/screens/home/student_info_screen.dart
+// lib/screens/home/student_info_screen.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart'; // For date formatting
-import 'package:school_management_system_teacher_app/models/student.dart';
-import 'package:school_management_system_teacher_app/utils/app_colors.dart';
-import 'package:school_management_system_teacher_app/Widget/super_profile_picture.dart';
-import 'package:school_management_system_teacher_app/controllers/student_info_controller.dart';
+import 'package:school_management_system_teacher_app/models/student.dart'; // Assuming your Student model is here
+import 'package:school_management_system_teacher_app/Widget/super_profile_picture.dart'; // Assuming this widget exists
+import 'package:school_management_system_teacher_app/controllers/student_info_controller.dart'; // Assuming this controller exists
 import 'package:shimmer/shimmer.dart'; // For shimmer effect
+import 'package:school_management_system_teacher_app/utils/app_colors.dart'; // Assuming AppColors is here
+import 'package:url_launcher/url_launcher.dart'; // Import url_launcher
+import 'package:school_management_system_teacher_app/services/address_service.dart'; // Import AddressService
 
 class StudentInfoScreen extends StatelessWidget {
   final String studentId;
@@ -14,9 +16,39 @@ class StudentInfoScreen extends StatelessWidget {
   const StudentInfoScreen({Key? key, required this.studentId})
       : super(key: key);
 
+  // Helper function to launch a phone call
+  Future<void> _makePhoneCall(String phoneNumber) async {
+    final Uri launchUri = Uri(
+      scheme: 'tel',
+      path: phoneNumber,
+    );
+    try {
+      if (await canLaunchUrl(launchUri)) {
+        await launchUrl(launchUri);
+      } else {
+        Get.snackbar(
+          'Call Failed',
+          'Could not launch $phoneNumber',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: AppColors.declineRed,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'An error occurred while trying to call: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppColors.declineRed,
+        colorText: Colors.white,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final StudentInfoController controller = Get.find<StudentInfoController>();
+    final StudentInfoController controller =
+        Get.find<StudentInfoController>(tag: studentId);
 
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
@@ -49,13 +81,22 @@ class StudentInfoScreen extends StatelessWidget {
           return _buildEmptyState();
         } else {
           final student = controller.student.value!;
-          return _buildStudentDetails(student, controller.fullAddress.value);
+          return _buildStudentDetails(student); // Removed fullAddress from here
         }
       }),
     );
   }
 
-  Widget _buildStudentDetails(Student student, String fullAddress) {
+  Widget _buildStudentDetails(Student student) {
+    // Get the AddressService instance here
+    final AddressService addressService = Get.find<AddressService>();
+
+    // Determine if family information is available
+    final bool hasFamilyInfo = (student.fatherName?.isNotEmpty ?? false) ||
+        (student.fatherPhone?.isNotEmpty ?? false) ||
+        (student.motherName?.isNotEmpty ?? false) ||
+        (student.motherPhone?.isNotEmpty ?? false);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -80,15 +121,6 @@ class StudentInfoScreen extends StatelessWidget {
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: AppColors.darkText,
-                    fontFamily: AppFonts.fontFamily,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                Text(
-                  'ID: ${student.id}',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: AppColors.mediumText,
                     fontFamily: AppFonts.fontFamily,
                   ),
                   textAlign: TextAlign.center,
@@ -153,16 +185,90 @@ class StudentInfoScreen extends StatelessWidget {
                   student.dateOfBirth != null
                       ? DateFormat('dd MMM yyyy').format(student.dateOfBirth!)
                       : 'N/A'),
-              _buildInfoRow(Icons.phone, 'Phone Number', student.phoneNumber),
+              // Make Phone Number tappable
+              _buildTappableInfoRow(
+                  Icons.phone, 'Phone Number', student.phoneNumber, () {
+                if (student.phoneNumber != student.phoneNumber.isNotEmpty) {
+                  _makePhoneCall(student.phoneNumber);
+                } else {
+                  Get.snackbar(
+                      'No Number', 'Student phone number not available.',
+                      snackPosition: SnackPosition.BOTTOM);
+                }
+              }),
               _buildInfoRow(Icons.email, 'Email', student.email),
+
+              // Separate address components
+              const Divider(
+                  height: 20,
+                  thickness: 0.5,
+                  color: AppColors.borderGrey), // Separator for address
+              _buildInfoRow(Icons.location_on_outlined, 'Village',
+                  addressService.getVillageName(student.village)),
+              _buildInfoRow(Icons.location_on_outlined, 'Commune',
+                  addressService.getCommuneName(student.commune)),
+              _buildInfoRow(Icons.location_on_outlined, 'District',
+                  addressService.getDistrictName(student.district)),
+              _buildInfoRow(Icons.location_on_outlined, 'Province',
+                  addressService.getProvinceName(student.province)),
             ],
           ),
 
-          // Academic & Attendance Details
+          // Family Information
+          _buildInfoCard(
+            title: 'Family Information',
+            children: [
+              if (hasFamilyInfo) ...[
+                // Display if any family info exists
+                _buildInfoRow(
+                    Icons.person, 'Father\'s Name', student.fatherName),
+                _buildTappableInfoRow(
+                    Icons.phone, 'Father\'s Phone', student.fatherPhone, () {
+                  if (student.fatherPhone != null &&
+                      student.fatherPhone!.isNotEmpty) {
+                    _makePhoneCall(student.fatherPhone!);
+                  } else {
+                    Get.snackbar(
+                        'No Number', 'Father\'s phone number not available.',
+                        snackPosition: SnackPosition.BOTTOM);
+                  }
+                }),
+                _buildInfoRow(
+                    Icons.person, 'Mother\'s Name', student.motherName),
+                _buildTappableInfoRow(
+                    Icons.phone, 'Mother\'s Phone', student.motherPhone, () {
+                  if (student.motherPhone != null &&
+                      student.motherPhone!.isNotEmpty) {
+                    _makePhoneCall(student.motherPhone!);
+                  } else {
+                    Get.snackbar(
+                        'No Number', 'Mother\'s phone number not available.',
+                        snackPosition: SnackPosition.BOTTOM);
+                  }
+                }),
+              ] else ...[
+                // Display if no family info exists
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8.0),
+                  child: Text(
+                    'Family information not available.',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontStyle: FontStyle.italic,
+                      color: AppColors.mediumText,
+                      fontFamily: AppFonts.fontFamily,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+
+          // Academic & Attendance Details (no phone numbers here, so _buildInfoRow is fine)
           _buildInfoCard(
             title: 'Academic & Attendance',
             children: [
-              _buildInfoRow(Icons.score_outlined, 'Overall Score',
+              _buildInfoRow(Icons.scoreboard_rounded, 'Attendence Score',
                   student.score?.toString()),
               _buildInfoRow(Icons.check_circle_outline, 'Total Attendance',
                   student.attendance?.toString()),
@@ -186,48 +292,41 @@ class StudentInfoScreen extends StatelessWidget {
               _buildInfoRow(Icons.track_changes_outlined, 'Score Status',
                   student.scoreStatus),
             ],
-          )
+          ),
         ],
       ),
     );
   }
 
-  // Helper to build a styled information card
+  // Helper to build a styled information card (no changes)
   Widget _buildInfoCard(
       {required String title, required List<Widget> children}) {
     return Card(
-      color: AppColors
-          .cardBackground, // Use AppColors.cardBackground for consistency
+      color: AppColors.cardBackground,
       margin: const EdgeInsets.only(bottom: 16.0),
-      // Enhanced shadow for a more "popped" effect and subtle definition
-      elevation: 6, // Slightly higher elevation for more depth
-      shadowColor:
-          AppColors.borderGrey.withOpacity(0.4), // Softer, more diffused shadow
+      elevation: 6,
+      shadowColor: AppColors.borderGrey.withOpacity(0.4),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16), // Consistent border radius
+        borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-            color: AppColors.borderGrey.withOpacity(0.5),
-            width: 0.5), // Subtle border
+            color: AppColors.borderGrey.withOpacity(0.5), width: 0.5),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(20.0), // Consistent padding for content
+        padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               title,
               style: const TextStyle(
-                fontSize: 20, // Slightly larger title for prominence
-                fontWeight: FontWeight.bold, // Keep bold
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
                 color: AppColors.darkText,
                 fontFamily: AppFonts.fontFamily,
               ),
             ),
             const Divider(
-                height: 28,
-                thickness: 1.5,
-                color: AppColors
-                    .borderGrey), // Increased height and thickness for divider
+                height: 28, thickness: 1.5, color: AppColors.borderGrey),
             ...children,
           ],
         ),
@@ -235,27 +334,22 @@ class StudentInfoScreen extends StatelessWidget {
     );
   }
 
-  // Helper to build a single information row with icon and text
+  // Original helper to build a single information row with icon and text (no changes)
   Widget _buildInfoRow(IconData icon, String label, String? value) {
     return Padding(
-      padding:
-          const EdgeInsets.symmetric(vertical: 10.0), // Good vertical spacing
+      padding: const EdgeInsets.symmetric(vertical: 10.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            // Add a subtle background for the icon
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
               color: AppColors.primaryBlue.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon,
-                size: 20,
-                color: AppColors
-                    .primaryBlue), // Icon size adjusted to fit container
+            child: Icon(icon, size: 20, color: AppColors.primaryBlue),
           ),
-          const SizedBox(width: 16), // Ample spacing between icon and text
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -264,16 +358,16 @@ class StudentInfoScreen extends StatelessWidget {
                   label,
                   style: const TextStyle(
                     fontSize: 15,
-                    fontWeight: FontWeight.w600, // Make labels slightly bolder
+                    fontWeight: FontWeight.w600,
                     color: AppColors.mediumText,
                     fontFamily: AppFonts.fontFamily,
                   ),
                 ),
-                const SizedBox(height: 6), // Consistent spacing
+                const SizedBox(height: 6),
                 Text(
-                  value ?? 'N/A', // Display 'N/A' if value is null
+                  value ?? 'N/A',
                   style: const TextStyle(
-                    fontSize: 17, // Larger value text for readability
+                    fontSize: 17,
                     color: AppColors.darkText,
                     fontFamily: AppFonts.fontFamily,
                   ),
@@ -286,7 +380,66 @@ class StudentInfoScreen extends StatelessWidget {
     );
   }
 
-  // Shimmer loading state for StudentInfoScreen
+  // NEW helper to build a tappable information row for phone numbers
+  Widget _buildTappableInfoRow(
+      IconData icon, String label, String? value, VoidCallback onTap) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10.0),
+      child: GestureDetector(
+        // Use GestureDetector to make the row tappable
+        onTap: value != null && value.isNotEmpty
+            ? onTap
+            : null, // Only enable tap if value exists
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: AppColors.primaryBlue.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, size: 20, color: AppColors.primaryBlue),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.mediumText,
+                      fontFamily: AppFonts.fontFamily,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    value ?? 'N/A',
+                    style: TextStyle(
+                      fontSize: 17,
+                      // Adjusted color for tappable numbers
+                      color: (value != null && value.isNotEmpty)
+                          ? AppColors.primaryBlue
+                          : AppColors.darkText,
+                      fontFamily: AppFonts.fontFamily,
+                      decoration: (value != null && value.isNotEmpty)
+                          ? TextDecoration.underline
+                          : TextDecoration.none,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Shimmer loading state for StudentInfoScreen (no changes)
   Widget _buildShimmerLoading() {
     return Shimmer.fromColors(
       baseColor: AppColors.skeletonBaseColor,
@@ -342,7 +495,7 @@ class StudentInfoScreen extends StatelessWidget {
     );
   }
 
-  // Error state for StudentInfoScreen
+  // Error state for StudentInfoScreen (no changes)
   Widget _buildErrorState(String errorMessage, VoidCallback onRetry) {
     return Center(
       child: Padding(
@@ -394,7 +547,7 @@ class StudentInfoScreen extends StatelessWidget {
     );
   }
 
-  // Empty state for StudentInfoScreen (e.g., student not found)
+  // Empty state for StudentInfoScreen (no changes)
   Widget _buildEmptyState() {
     return Center(
       child: Padding(

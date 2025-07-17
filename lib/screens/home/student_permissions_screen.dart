@@ -31,7 +31,7 @@ class StudentPermissionsScreen extends StatelessWidget {
       appBar: _buildAppBar(),
       body: Column(
         children: [
-          _buildHeader(controller), // Pass the controller to the header
+          _buildHeader(controller),
           Expanded(
             child: Obx(() {
               if (controller.isLoading.value) {
@@ -64,6 +64,7 @@ class StudentPermissionsScreen extends StatelessWidget {
     );
   }
 
+  /// Builds the AppBar for the Student Permissions screen.
   AppBar _buildAppBar() {
     return AppBar(
       backgroundColor: AppColors.primaryBlue,
@@ -86,7 +87,7 @@ class StudentPermissionsScreen extends StatelessWidget {
     );
   }
 
-  /// Builds the header section displaying permission counts.
+  /// Builds the header section displaying class info and permission counts.
   Widget _buildHeader(StudentPermissionController controller) {
     return Container(
       color: AppColors.primaryBlue,
@@ -96,10 +97,11 @@ class StudentPermissionsScreen extends StatelessWidget {
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: const EdgeInsets.fromLTRB(24, 25, 24, 16),
-        child: Obx(() => Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 20),
+            Obx(() => Row(
                   children: [
                     Expanded(
                       child: _buildCountBadge(
@@ -111,25 +113,15 @@ class StudentPermissionsScreen extends StatelessWidget {
                     const SizedBox(width: 16),
                     Expanded(
                       child: _buildCountBadge(
-                        'All',
+                        'Total',
                         controller.totalPermissions.value.toString(),
                         AppColors.primaryBlue,
                       ),
                     ),
                   ],
-                ),
-                const SizedBox(height: 20),
-                // Align(
-                //   alignment: Alignment.centerRight,
-                //   child: SvgPicture.asset(
-                //     'assets/images/teacher_management/permission.svg',
-                //     height: 100,
-                //     width: 100,
-                //     fit: BoxFit.contain,
-                //   ),
-                // ),
-              ],
-            )),
+                )),
+          ],
+        ),
       ),
     );
   }
@@ -137,7 +129,6 @@ class StudentPermissionsScreen extends StatelessWidget {
   /// Helper to build a single count badge with improved styling.
   Widget _buildCountBadge(String title, String count, Color color) {
     return Container(
-      // Changed from Card to Container for more control over decoration
       decoration: BoxDecoration(
         color: color.withOpacity(0.08),
         borderRadius: BorderRadius.circular(12),
@@ -201,34 +192,62 @@ class StudentPermissionsScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.borderGrey.withOpacity(0.2),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(children: [
-            const CircleAvatar(radius: 24, backgroundColor: Colors.white),
+            Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: AppColors.skeletonHighlightColor,
+                  shape: BoxShape.circle,
+                )),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                      height: 16, width: double.infinity, color: Colors.white),
+                      height: 16,
+                      width: double.infinity,
+                      color: AppColors.skeletonHighlightColor),
                   const SizedBox(height: 4),
-                  Container(height: 13, width: 100, color: Colors.white),
+                  Container(
+                      height: 13,
+                      width: 100,
+                      color: AppColors.skeletonHighlightColor),
                 ],
               ),
             ),
             const SizedBox(width: 8),
-            Container(height: 20, width: 70, color: Colors.white),
+            Container(
+                height: 20, width: 70, color: AppColors.skeletonHighlightColor),
             const SizedBox(width: 8),
-            Container(height: 24, width: 24, color: Colors.white),
+            Container(
+                height: 24,
+                width: 24,
+                color: AppColors.skeletonHighlightColor,
+                child: const Icon(Icons.arrow_forward_ios_rounded,
+                    color: Colors.transparent)),
           ]),
           const SizedBox(height: 16),
-          Container(height: 16, width: double.infinity, color: Colors.white),
+          Container(
+              height: 16,
+              width: double.infinity,
+              color: AppColors.skeletonHighlightColor),
           const SizedBox(height: 8),
-          Container(height: 16, width: 150, color: Colors.white),
+          Container(
+              height: 16, width: 150, color: AppColors.skeletonHighlightColor),
         ],
       ),
     );
@@ -326,6 +345,7 @@ class StudentPermissionsScreen extends StatelessWidget {
   }
 }
 
+/// A custom widget to display a single student permission request.
 class StudentPermissionCard extends StatelessWidget {
   final PermissionItem permission;
   final StudentPermissionController controller;
@@ -338,6 +358,7 @@ class StudentPermissionCard extends StatelessWidget {
     required this.classId,
   }) : super(key: key);
 
+  /// Determines the color for permission status text and background.
   Color _getStatusColor(String status, {bool isBackground = false}) {
     switch (status.toLowerCase()) {
       case "pending":
@@ -358,140 +379,134 @@ class StudentPermissionCard extends StatelessWidget {
     }
   }
 
+  /// Builds a detailed row with an icon, label, and value.
   Widget _buildDetailRow(IconData icon, String label, String value) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 20, color: AppColors.mediumText),
-        const SizedBox(width: 10),
-        Expanded(
-          child: RichText(
-            text: TextSpan(
-              children: [
-                TextSpan(
-                  text: label,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.darkText,
-                    fontFamily: AppFonts.fontFamily,
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+          vertical: 4.0), // Slightly reduced vertical padding
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 20, color: AppColors.mediumText),
+          const SizedBox(width: 10),
+          Expanded(
+            child: RichText(
+              text: TextSpan(
+                children: [
+                  TextSpan(
+                    text: label,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.darkText,
+                      fontFamily: AppFonts.fontFamily,
+                    ),
                   ),
-                ),
-                TextSpan(
-                  text: ' $value',
-                  style: const TextStyle(
-                    color: AppColors.mediumText,
-                    fontFamily: AppFonts.fontFamily,
+                  TextSpan(
+                    text: ' $value',
+                    style: const TextStyle(
+                      color: AppColors.mediumText,
+                      fontFamily: AppFonts.fontFamily,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
             ),
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
+  /// Builds the expanded details section of the permission card.
   Widget _buildExpandedDetails(PermissionItem permission) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Divider(height: 32, thickness: 1, color: AppColors.borderGrey),
-        const Text(
-          "Permission Detail",
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 16,
-            color: AppColors.darkText,
-            fontFamily: AppFonts.fontFamily,
+    return AnimatedSize(
+      // Wrap with AnimatedSize for smooth expansion
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Divider(height: 32, thickness: 1, color: AppColors.borderGrey),
+          const Text(
+            "Permission Detail",
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 16,
+              color: AppColors.darkText,
+              fontFamily: AppFonts.fontFamily,
+            ),
           ),
-        ),
-        const SizedBox(height: 12),
-        _buildDetailRow(Icons.calendar_today_rounded, "Date:",
-            permission.formattedDateRange),
-        const SizedBox(height: 8),
-        _buildDetailRow(Icons.edit_note_rounded, "Reason:", permission.reason),
-        const SizedBox(height: 20),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            if (permission.status.toLowerCase() == "pending") ...[
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    controller.updatePermissionStatus(
-                        permission.id, "denied", classId);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.declineRed, // Solid red for Deny
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    elevation: 2, // Add a slight elevation
+          const SizedBox(height: 12),
+          _buildDetailRow(Icons.calendar_today_rounded, "Date:",
+              permission.formattedDateRange),
+          const SizedBox(height: 8),
+          _buildDetailRow(
+              Icons.edit_note_rounded, "Reason:", permission.reason),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              if (permission.status.toLowerCase() == "pending") ...[
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      controller.updatePermissionStatus(
+                          permission.id, "denied");
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.declineRed,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      elevation: 2,
+                    ),
+                    child: const Text("Deny",
+                        style: TextStyle(
+                            fontFamily: AppFonts.fontFamily,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600)),
                   ),
-                  child: const Text("Deny",
-                      style: TextStyle(
-                          fontFamily: AppFonts.fontFamily,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600)),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    controller.updatePermissionStatus(
-                        permission.id, "Accepted", classId);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        AppColors.successGreen, // Solid green for Approve
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    elevation: 2, // Add a slight elevation
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      controller.updatePermissionStatus(
+                          permission.id, "approved");
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.successGreen,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      elevation: 2,
+                    ),
+                    child: const Text("Approve",
+                        style: TextStyle(
+                            fontFamily: AppFonts.fontFamily,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600)),
                   ),
-                  child: const Text("Accepted",
-                      style: TextStyle(
-                          fontFamily: AppFonts.fontFamily,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600)),
                 ),
-              ),
-            ] else if (permission.status.toLowerCase() == "Accepted")
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                decoration: BoxDecoration(
-                  color: AppColors.successGreen.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.successGreen),
+              ] else if (permission.status.toLowerCase() == "accepted")
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                )
+              else if (permission.status.toLowerCase() == "denied" ||
+                  permission.status.toLowerCase() == "rejected")
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 ),
-                child: Text(
-                  "Already Accepted",
-                  style: TextStyle(
-                      color: AppColors.successGreen,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: AppFonts.fontFamily),
-                ),
-              )
-            else if (permission.status.toLowerCase() == "denied" ||
-                permission.status.toLowerCase() == "rejected")
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                // decoration: BoxDecoration(
-                //   color: AppColors.declineRed.withOpacity(0.1),
-                //   borderRadius: BorderRadius.circular(12),
-                //   border: Border.all(color: AppColors.declineRed),
-                // ),
-              ),
-          ],
-        ),
-      ],
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -502,9 +517,7 @@ class StudentPermissionCard extends StatelessWidget {
     final studentAvatarUrl = permission.studentDetails?.avatarUrl;
 
     return Obx(() => Container(
-          // Changed from Card to Container for more custom styling
-          margin: const EdgeInsets.symmetric(
-              vertical: 4.0), // Add some vertical margin between cards
+          margin: const EdgeInsets.symmetric(vertical: 4.0),
           decoration: BoxDecoration(
             color: AppColors.cardBackground,
             borderRadius: BorderRadius.circular(16),
@@ -515,8 +528,7 @@ class StudentPermissionCard extends StatelessWidget {
                 offset: const Offset(0, 4),
               ),
             ],
-            border: Border.all(
-                color: AppColors.borderGrey, width: 1), // Subtle border
+            border: Border.all(color: AppColors.borderGrey, width: 1),
           ),
           child: InkWell(
             borderRadius: BorderRadius.circular(16),
@@ -529,8 +541,7 @@ class StudentPermissionCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment
-                        .center, // Align items vertically in the center
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       SuperProfilePicture(
                         imageUrl: studentAvatarUrl,

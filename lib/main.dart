@@ -1,4 +1,4 @@
-// tiemitservice/edtech_academy_management_system_teacherapp/Edtech_Academy_Management_System_TeacherApp-a41b5c2bda2f109f4f2f39b45e2ddf1ef6a9d71c/lib/main.dart
+// lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:school_management_system_teacher_app/routes/app_routes.dart';
@@ -10,8 +10,7 @@ import 'package:school_management_system_teacher_app/services/student_repository
 import 'package:school_management_system_teacher_app/services/student_list_service.dart';
 import 'package:school_management_system_teacher_app/services/student_info_service.dart';
 import 'package:school_management_system_teacher_app/services/address_service.dart';
-import 'package:school_management_system_teacher_app/utils/app_colors.dart'; // NEW IMPORT
-
+import 'package:school_management_system_teacher_app/utils/app_colors.dart';
 // Main binding to initialize all necessary controllers and services
 class MainBinding extends Bindings {
   @override
@@ -19,11 +18,13 @@ class MainBinding extends Bindings {
     Get.lazyPut(() => StudentPermissionService());
     Get.lazyPut(() => StudentRepository());
     Get.put(StudentListService()); // Ensure immediate availability
-    Get.lazyPut(() =>
-        StudentInfoService()); // Keep as lazyPut here, as it's found by route-bound controller
 
-    // NEW: Register AddressService globally and ensure it's initialized
-    Get.put(AddressService());
+    // FIX: Removed StudentListController from MainBinding.
+    // It is now exclusively managed by StudentListBinding (per route instance).
+    // Get.lazyPut(() => StudentListController()); // REMOVE THIS LINE
+
+    Get.put(StudentInfoService()); // Ensured immediate instantiation
+    Get.put(AddressService()); // Ensured immediate instantiation
 
     Get.put(AuthController());
     Get.put(StudentPermissionController());

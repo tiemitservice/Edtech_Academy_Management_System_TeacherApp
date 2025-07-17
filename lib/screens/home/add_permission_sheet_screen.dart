@@ -29,7 +29,6 @@ class _AddPermissionSheetScreenState extends State<AddPermissionSheetScreen> {
   static const Color _lightBlueAccent = Color(0xFF5B9BD5);
 
   // --- Font Family Constant ---
-  // Define the font family name as a constant to use it everywhere.
   static const String _fontFamily = AppFonts.fontFamily;
 
   final TextEditingController _dateController = TextEditingController();
@@ -342,93 +341,104 @@ class _AddPermissionSheetScreenState extends State<AddPermissionSheetScreen> {
         color: _lightBackground,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      child: Theme(
-        data: Theme.of(context).copyWith(
-          // Customize text selection theme for better UX
-          textSelectionTheme: const TextSelectionThemeData(
-            selectionColor: _lightBlueAccent,
-            cursorColor: _primaryBlue,
-            selectionHandleColor: _primaryBlue,
+      // Wrap the content in a SingleChildScrollView to prevent overflow
+      child: SingleChildScrollView(
+        // <--- ADD THIS
+        child: Padding(
+          // <--- ADD THIS to apply padding inside the scroll view
+          padding: EdgeInsets.only(
+            bottom:
+                MediaQuery.of(context).viewInsets.bottom, // Adjust for keyboard
           ),
-          // Set the default font family for the entire theme subtree
-          textTheme: Theme.of(context).textTheme.apply(fontFamily: _fontFamily),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+          child: Theme(
+            data: Theme.of(context).copyWith(
+              textSelectionTheme: const TextSelectionThemeData(
+                selectionColor: _lightBlueAccent,
+                cursorColor: _primaryBlue,
+                selectionHandleColor: _primaryBlue,
+              ),
+              textTheme:
+                  Theme.of(context).textTheme.apply(fontFamily: _fontFamily),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize
+                  .min, // Keep min to let SingleChildScrollView determine height
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                      color: _darkText, size: 24),
-                  onPressed: () => Get.back(),
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                          color: _darkText, size: 24),
+                      onPressed: () => Get.back(),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      "Add Permission",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: _darkText,
+                        fontFamily: _fontFamily,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  // Changed to Text widget to apply font family
-                  "Add Permission",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: _darkText,
-                    fontFamily: _fontFamily, // Apply font family
+                const SizedBox(height: 24),
+                _buildInputFieldWithLabel(
+                  label: "Choose Date",
+                  controller: _dateController,
+                  hintText: 'Select a date or date range',
+                  icon: Icons.calendar_month,
+                  onTap: _showDateRangePicker,
+                  readOnly: true,
+                ),
+                const SizedBox(height: 24),
+                _buildInputFieldWithLabel(
+                  label: "Reason",
+                  controller: _reasonController,
+                  hintText: 'Ex: Hospital Appointment',
+                  maxLines: 5,
+                  icon: Icons.edit_note_rounded,
+                ),
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: (_isApplyButtonEnabled && !_isLoading)
+                        ? _submitPermissionRequest
+                        : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _primaryBlue,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      elevation: 0,
+                      disabledBackgroundColor: _borderGrey,
+                      disabledForegroundColor: _mediumText,
+                    ),
+                    child: _isLoading
+                        ? const CircularProgressIndicator(
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
+                          )
+                        : const Text(
+                            "Apply",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: _fontFamily,
+                            ),
+                          ),
                   ),
                 ),
+                const SizedBox(height: 10),
               ],
             ),
-            const SizedBox(height: 24),
-            _buildInputFieldWithLabel(
-              label: "Choose Date",
-              controller: _dateController,
-              hintText: 'Select a date or date range',
-              icon: Icons.calendar_month,
-              onTap: _showDateRangePicker,
-              readOnly: true,
-            ),
-            const SizedBox(height: 24),
-            _buildInputFieldWithLabel(
-              label: "Reason",
-              controller: _reasonController,
-              hintText: 'Ex: Hospital Appointment',
-              maxLines: 5,
-              icon: Icons.edit_note_rounded,
-            ),
-            const SizedBox(height: 32),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: (_isApplyButtonEnabled && !_isLoading)
-                    ? _submitPermissionRequest
-                    : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _primaryBlue,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  elevation: 0,
-                  disabledBackgroundColor: _borderGrey,
-                  disabledForegroundColor: _mediumText,
-                ),
-                child: _isLoading
-                    ? const CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      )
-                    : const Text(
-                        "Apply",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: _fontFamily, // Apply font family
-                        ),
-                      ),
-              ),
-            ),
-            const SizedBox(height: 10),
-          ],
+          ),
         ),
-      ),
+      ), // <--- END OF SingleChildScrollView
     );
   }
 
@@ -451,20 +461,18 @@ class _AddPermissionSheetScreenState extends State<AddPermissionSheetScreen> {
               TextSpan(
                   text: label,
                   style: const TextStyle(
-                      color: _darkText,
-                      fontFamily: _fontFamily)), // Apply font family
+                      color: _darkText, fontFamily: _fontFamily)),
               const TextSpan(
                   text: "*",
-                  style: TextStyle(
-                      color: _declineRed,
-                      fontFamily: _fontFamily)), // Apply font family
+                  style:
+                      TextStyle(color: _declineRed, fontFamily: _fontFamily)),
             ],
           ),
           style: const TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w600,
             color: _darkText,
-            fontFamily: _fontFamily, // Apply font family
+            fontFamily: _fontFamily,
           ),
         ),
         const SizedBox(height: 8),
@@ -480,9 +488,8 @@ class _AddPermissionSheetScreenState extends State<AddPermissionSheetScreen> {
                     size: 18, color: _mediumText)
                 : null,
             hintText: hintText,
-            hintStyle: const TextStyle(
-                color: _mediumText,
-                fontFamily: _fontFamily), // Apply font family to hint
+            hintStyle:
+                const TextStyle(color: _mediumText, fontFamily: _fontFamily),
             filled: true,
             fillColor: _cardBackground,
             border: OutlineInputBorder(
@@ -500,9 +507,7 @@ class _AddPermissionSheetScreenState extends State<AddPermissionSheetScreen> {
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
           ),
-          style: const TextStyle(
-              color: _darkText,
-              fontFamily: _fontFamily), // Apply font family to input text
+          style: const TextStyle(color: _darkText, fontFamily: _fontFamily),
         ),
       ],
     );
