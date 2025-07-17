@@ -1,4 +1,5 @@
 // lib/screens/home/student_info_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart'; // For date formatting
@@ -81,17 +82,15 @@ class StudentInfoScreen extends StatelessWidget {
           return _buildEmptyState();
         } else {
           final student = controller.student.value!;
-          return _buildStudentDetails(student); // Removed fullAddress from here
+          return _buildStudentDetails(student);
         }
       }),
     );
   }
 
   Widget _buildStudentDetails(Student student) {
-    // Get the AddressService instance here
     final AddressService addressService = Get.find<AddressService>();
 
-    // Determine if family information is available
     final bool hasFamilyInfo = (student.fatherName?.isNotEmpty ?? false) ||
         (student.fatherPhone?.isNotEmpty ?? false) ||
         (student.motherName?.isNotEmpty ?? false) ||
@@ -264,13 +263,11 @@ class StudentInfoScreen extends StatelessWidget {
             ],
           ),
 
-          // Academic & Attendance Details (no phone numbers here, so _buildInfoRow is fine)
+          // Academic & Attendance Details
           _buildInfoCard(
             title: 'Academic & Attendance',
             children: [
-              _buildInfoRow(Icons.scoreboard_rounded, 'Attendence Score',
-                  student.score?.toString()),
-              _buildInfoRow(Icons.check_circle_outline, 'Total Attendance',
+              _buildInfoRow(Icons.check_circle_outline, 'Attendance Score',
                   student.attendance?.toString()),
               _buildInfoRow(
                   Icons.calendar_today_outlined,
@@ -281,16 +278,31 @@ class StudentInfoScreen extends StatelessWidget {
                       : 'N/A'),
               _buildInfoRow(Icons.info_outline, 'Attendance Status',
                   student.attendanceEnum),
-              _buildInfoRow(Icons.star_half_outlined, 'Quiz Score',
-                  student.quizScore?.toString()),
-              _buildInfoRow(Icons.star_half_outlined, 'Midterm Score',
-                  student.midtermScore?.toString()),
-              _buildInfoRow(Icons.star_outlined, 'Final Score',
-                  student.finalScore?.toString()),
-              _buildInfoRow(Icons.grading_outlined, 'Total Attendance Score',
-                  student.totalAttendanceScore?.toString()),
-              _buildInfoRow(Icons.track_changes_outlined, 'Score Status',
-                  student.scoreStatus),
+              const Divider(
+                  height: 20,
+                  thickness: 0.5,
+                  color: AppColors
+                      .borderGrey), // Separator for attendance and scores
+              _buildInfoRow(Icons.score, 'Class Practice',
+                  student.classPractice?.toString()),
+              _buildInfoRow(
+                  Icons.assignment, 'Home Work', student.homeWork?.toString()),
+              _buildInfoRow(Icons.assignment_turned_in, 'Assignment Score',
+                  student.assignmentScore?.toString()),
+              _buildInfoRow(Icons.group, 'Presentation',
+                  student.presentation?.toString()),
+              _buildInfoRow(Icons.quiz, 'Revision Test',
+                  student.revisionTest?.toString()),
+              _buildInfoRow(
+                  Icons.school, 'Final Exam', student.finalExam?.toString()),
+              _buildInfoRow(
+                  Icons.book, 'Work Book', student.workBook?.toString()),
+              _buildInfoRow(Icons.assessment, 'Total Overall Score',
+                  student.totalOverallScore?.toString()),
+              _buildInfoRow(Icons.comment, 'Comments', student.comments),
+              _buildInfoRow(Icons.note, 'Note', student.note),
+              _buildInfoRow(Icons.login, 'Entry Time', student.entryTime),
+              _buildInfoRow(Icons.logout, 'Exit Time', student.exitTime),
             ],
           ),
         ],

@@ -11,6 +11,7 @@ class Student {
   final DateTime? dateOfBirth;
   final String? fatherName;
   final String? motherName;
+  // Existing score and attendance fields - keep them for now as they might be used elsewhere
   final int? score;
   final int? attendance; // Assuming 'attendence' is total attendance
   final DateTime? attendanceDate; // Assuming 'attendence_date'
@@ -33,6 +34,22 @@ class Student {
   final String? documentType;
   final String? documentNumber;
   final bool? status; // Add status field
+
+  // New fields for Academic & Attendance from API
+  final int? classPractice;
+  final int? homeWork;
+  final int? assignmentScore;
+  final int? presentation;
+  final int? revisionTest;
+  final int? finalExam;
+  final int?
+      totalOverallScore; // Renamed from total_score to avoid confusion with existing 'score'
+  final int? workBook;
+  final String? note;
+  final String? exitTime;
+  final String? entryTime;
+  final String? comments;
+  final String? checkingAt;
 
   Student({
     required this.id,
@@ -68,51 +85,90 @@ class Student {
     this.documentType,
     this.documentNumber,
     this.status,
+    // Initialize new fields
+    this.classPractice,
+    this.homeWork,
+    this.assignmentScore,
+    this.presentation,
+    this.revisionTest,
+    this.finalExam,
+    this.totalOverallScore,
+    this.workBook,
+    this.note,
+    this.exitTime,
+    this.entryTime,
+    this.comments,
+    this.checkingAt,
   });
 
   factory Student.fromJson(Map<String, dynamic> json) {
+    // Extract student data directly from the nested 'student' map if it exists
+    Map<String, dynamic> studentJson = json;
+    if (json.containsKey('student') &&
+        json['student'] is Map<String, dynamic>) {
+      studentJson = json['student'] as Map<String, dynamic>;
+    }
+
     return Student(
-      id: json['_id'] as String,
-      khName: json['kh_name'] as String,
-      engName: json['eng_name'] as String,
-      gender: json['gender'] as String,
-      phoneNumber: json['phoneNumber'] as String,
-      email: json['email'] as String?,
-      avatarUrl: json['image'] as String?, // 'image' field in JSON
-      address: json['address'] as String?,
-      dateOfBirth: json['date_of_birth'] != null
-          ? DateTime.tryParse(json['date_of_birth'])
+      id: studentJson['_id'] as String,
+      khName: studentJson['kh_name'] as String,
+      engName: studentJson['eng_name'] as String,
+      gender: studentJson['gender'] as String,
+      phoneNumber: studentJson['phoneNumber'] as String,
+      email: studentJson['email'] as String?,
+      avatarUrl: studentJson['image'] as String?, // 'image' field in JSON
+      address: studentJson['address'] as String?,
+      dateOfBirth: studentJson['date_of_birth'] != null
+          ? DateTime.tryParse(studentJson['date_of_birth'])
           : null,
-      fatherName: json['father_name'] as String?,
-      motherName: json['mother_name'] as String?,
-      score: (json['score'] as num?)?.toInt(),
-      attendance: (json['attendence'] as num?)?.toInt(), // 'attendence' field
-      attendanceDate: json['attendence_date'] != null
-          ? DateTime.tryParse(json['attendence_date'])
+      fatherName: studentJson['father_name'] as String?,
+      motherName: studentJson['mother_name'] as String?,
+      score: (studentJson['score'] as num?)?.toInt(),
+      attendance:
+          (studentJson['attendence'] as num?)?.toInt(), // 'attendence' field
+      attendanceDate: studentJson['attendence_date'] != null
+          ? DateTime.tryParse(studentJson['attendence_date'])
           : null,
-      attendanceEnum: json['attendence_enum'] as String?,
-      studentType: json['student_type'] as String?,
-      finalScore: (json['final_score'] as num?)?.toInt(),
-      midtermScore: (json['midterm_score'] as num?)?.toInt(),
-      quizScore: (json['quiz_score'] as num?)?.toInt(),
-      totalAttendanceScore: (json['total_attendance_score'] as num?)?.toInt(),
-      scoreStatus: json['score_status'] as String?,
-      commune: json['commune'] as String?,
-      district: json['district'] as String?,
-      province: json['province'] as String?,
-      village: json['village'] as String?,
-      paymentDate: json['payment_date'] != null
-          ? DateTime.tryParse(json['payment_date'])
+      attendanceEnum: studentJson['attendence_enum'] as String?,
+      studentType: studentJson['student_type'] as String?,
+      finalScore: (studentJson['final_score'] as num?)?.toInt(),
+      midtermScore: (studentJson['midterm_score'] as num?)?.toInt(),
+      quizScore: (studentJson['quiz_score'] as num?)?.toInt(),
+      totalAttendanceScore:
+          (studentJson['total_attendance_score'] as num?)?.toInt(),
+      scoreStatus: studentJson['score_status'] as String?,
+      commune: studentJson['commune'] as String?,
+      district: studentJson['district'] as String?,
+      province: studentJson['province'] as String?,
+      village: studentJson['village'] as String?,
+      paymentDate: studentJson['payment_date'] != null
+          ? DateTime.tryParse(studentJson['payment_date'])
           : null,
-      paymentType: json['payment_type'] as String?,
-      nextPaymentDate: json['next_payment_date'] != null
-          ? DateTime.tryParse(json['next_payment_date'])
+      paymentType: studentJson['payment_type'] as String?,
+      nextPaymentDate: studentJson['next_payment_date'] != null
+          ? DateTime.tryParse(studentJson['next_payment_date'])
           : null,
-      fatherPhone: json['father_phone'] as String?,
-      motherPhone: json['mother_phone'] as String?,
-      documentType: json['document_type'] as String?,
-      documentNumber: json['document_number'] as String?,
-      status: json['status'] as bool?, // 'status' field
+      fatherPhone: studentJson['father_phone'] as String?,
+      motherPhone: studentJson['mother_phone'] as String?,
+      documentType: studentJson['document_type'] as String?,
+      documentNumber: studentJson['document_number'] as String?,
+      status: studentJson['status'] as bool?, // 'status' field
+
+      // Parse new fields. Note: these are at the same level as 'student' in the API response.
+      // So we need to check the original 'json' map, not 'studentJson' for these.
+      classPractice: (json['class_practice'] as num?)?.toInt(),
+      homeWork: (json['home_work'] as num?)?.toInt(),
+      assignmentScore: (json['assignment_score'] as num?)?.toInt(),
+      presentation: (json['presentation'] as num?)?.toInt(),
+      revisionTest: (json['revision_test'] as num?)?.toInt(),
+      finalExam: (json['final_exam'] as num?)?.toInt(),
+      totalOverallScore: (json['total_score'] as num?)?.toInt(),
+      workBook: (json['work_book'] as num?)?.toInt(),
+      note: json['note'] as String?,
+      exitTime: json['exit_time'] as String?,
+      entryTime: json['entry_time'] as String?,
+      comments: json['comments'] as String?,
+      checkingAt: json['checking_at'] as String?,
     );
   }
 
