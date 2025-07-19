@@ -11,6 +11,7 @@ import 'package:school_management_system_teacher_app/services/student_list_servi
 import 'package:school_management_system_teacher_app/services/student_info_service.dart';
 import 'package:school_management_system_teacher_app/services/address_service.dart';
 import 'package:school_management_system_teacher_app/utils/app_colors.dart';
+
 // Main binding to initialize all necessary controllers and services
 class MainBinding extends Bindings {
   @override
@@ -53,7 +54,7 @@ class MyApp extends StatelessWidget {
       ),
       initialBinding: MainBinding(), // Initialize all dependencies
       initialRoute:
-          AppRoutes.home, // Set to home or your desired starting screen
+          AppRoutes.splash, // Set to home or your desired starting screen
       getPages: AppRoutes.routes, // Your defined routes
     );
   }

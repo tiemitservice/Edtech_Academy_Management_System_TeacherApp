@@ -68,9 +68,9 @@ class _StudentScoreInputScreenState extends State<StudentScoreInputScreen> {
 
     // Load existing student data into the form fields
     final studentData = widget.student;
-    _quizScoreController.text = (studentData.quiz_score ?? 0).toString();
-    _midtermScoreController.text = (studentData.midterm_score ?? 0).toString();
-    _finalScoreController.text = (studentData.final_score ?? 0).toString();
+    // _quizScoreController.text = (studentData.quiz_score ?? 0).toString();
+    // _midtermScoreController.text = (studentData.midterm_score ?? 0).toString();
+    // _finalScoreController.text = (studentData.final_score ?? 0).toString();
 
     // Capitalize the status from the API (e.g., "present" -> "Present")
     String status = studentData.status;

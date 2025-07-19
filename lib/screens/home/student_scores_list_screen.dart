@@ -110,9 +110,9 @@ class _StudentScoresListScreenState extends State<StudentScoresListScreen> {
             avatarUrl: studentJson['image'],
             status: studentJson['attendence_enum'] ?? 'N/A',
             // Ensure these are parsed correctly from the API to match the Student model
-            quiz_score: (studentJson['quiz_score'] ?? 0).toDouble(),
-            midterm_score: (studentJson['midterm_score'] ?? 0).toDouble(),
-            final_score: (studentJson['final_score'] ?? 0).toDouble(),
+            // quiz_score: (studentJson['quiz_score'] ?? 0).toDouble(),
+            // midterm_score: (studentJson['midterm_score'] ?? 0).toDouble(),
+            // final_score: (studentJson['final_score'] ?? 0).toDouble(),
           );
 
           // Calculate total score by summing up the different score fields from the API
