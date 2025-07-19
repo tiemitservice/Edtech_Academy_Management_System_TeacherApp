@@ -16,7 +16,6 @@ import 'package:school_management_system_teacher_app/screens/home/student_permis
 import 'package:school_management_system_teacher_app/screens/home/student_score_input_screen.dart';
 import 'package:school_management_system_teacher_app/screens/home/student_scores_list_screen.dart';
 import 'package:school_management_system_teacher_app/screens/home/teacher_management_screen.dart';
-import 'package:school_management_system_teacher_app/screens/settings_screen.dart';
 import 'package:school_management_system_teacher_app/screens/splash_screen.dart';
 import 'package:school_management_system_teacher_app/screens/home/student_info_screen.dart';
 import 'package:school_management_system_teacher_app/controllers/student_list_controller.dart';
@@ -39,7 +38,6 @@ class AppRoutes {
   static const String myPermission = '/my-permission';
   static const String studentList = '/student-list';
   static const String studentInfo = '/student-info';
-  static const String settings = '/settings';
 
   static final List<GetPage> routes = [
     GetPage(name: splash, page: () => const SplashScreen()),
@@ -52,7 +50,6 @@ class AppRoutes {
     GetPage(name: profile, page: () => const ProfileScreen()),
     GetPage(name: editProfile, page: () => const EditProfileScreen()),
     GetPage(name: classManagement, page: () => const ClassManagementScreen()),
-    GetPage(name: settings, page: () => const SettingsScreen()),
     GetPage(
       name: checkAttendance,
       page: () => CheckAttendanceScreen(
