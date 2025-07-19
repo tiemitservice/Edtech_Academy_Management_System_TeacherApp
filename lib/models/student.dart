@@ -42,8 +42,7 @@ class Student {
   final int? presentation;
   final int? revisionTest;
   final int? finalExam;
-  final int?
-      totalOverallScore; // Renamed from total_score to avoid confusion with existing 'score'
+  final int? totalOverallScore;
   final int? workBook;
   final String? note;
   final String? exitTime;
@@ -102,7 +101,8 @@ class Student {
   });
 
   factory Student.fromJson(Map<String, dynamic> json) {
-    // Extract student data directly from the nested 'student' map if it exists
+    // If the API response sometimes nests student data under a 'student' key,
+    // this logic handles it. Otherwise, 'studentJson' will simply be the 'json' itself.
     Map<String, dynamic> studentJson = json;
     if (json.containsKey('student') &&
         json['student'] is Map<String, dynamic>) {
@@ -154,21 +154,20 @@ class Student {
       documentNumber: studentJson['document_number'] as String?,
       status: studentJson['status'] as bool?, // 'status' field
 
-      // Parse new fields. Note: these are at the same level as 'student' in the API response.
-      // So we need to check the original 'json' map, not 'studentJson' for these.
-      classPractice: (json['class_practice'] as num?)?.toInt(),
-      homeWork: (json['home_work'] as num?)?.toInt(),
-      assignmentScore: (json['assignment_score'] as num?)?.toInt(),
-      presentation: (json['presentation'] as num?)?.toInt(),
-      revisionTest: (json['revision_test'] as num?)?.toInt(),
-      finalExam: (json['final_exam'] as num?)?.toInt(),
-      totalOverallScore: (json['total_score'] as num?)?.toInt(),
-      workBook: (json['work_book'] as num?)?.toInt(),
-      note: json['note'] as String?,
-      exitTime: json['exit_time'] as String?,
-      entryTime: json['entry_time'] as String?,
-      comments: json['comments'] as String?,
-      checkingAt: json['checking_at'] as String?,
+      // Parse new fields from studentJson, assuming they are always part of the student object
+      classPractice: (studentJson['class_practice'] as num?)?.toInt(),
+      homeWork: (studentJson['home_work'] as num?)?.toInt(),
+      assignmentScore: (studentJson['assignment_score'] as num?)?.toInt(),
+      presentation: (studentJson['presentation'] as num?)?.toInt(),
+      revisionTest: (studentJson['revision_test'] as num?)?.toInt(),
+      finalExam: (studentJson['final_exam'] as num?)?.toInt(),
+      totalOverallScore: (studentJson['total_score'] as num?)?.toInt(),
+      workBook: (studentJson['work_book'] as num?)?.toInt(),
+      note: studentJson['note'] as String?,
+      exitTime: studentJson['exit_time'] as String?,
+      entryTime: studentJson['entry_time'] as String?,
+      comments: studentJson['comments'] as String?,
+      checkingAt: studentJson['checking_at'] as String?,
     );
   }
 
