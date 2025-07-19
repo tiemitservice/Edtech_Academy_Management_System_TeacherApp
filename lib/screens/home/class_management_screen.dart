@@ -6,9 +6,11 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:school_management_system_teacher_app/routes/app_routes.dart';
-import 'package:school_management_system_teacher_app/utils/app_colors.dart';
+// Note: You may need to adjust the import path for app_colors.dart
+// import 'package:school_management_system_teacher_app/utils/app_colors.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:school_management_system_teacher_app/controllers/auth_controller.dart';
+import 'package:school_management_system_teacher_app/controllers/notification_controller.dart';
 
 class TeacherClass {
   final String id;
@@ -29,7 +31,6 @@ class TeacherClass {
     required this.staffId,
   });
 
-  /// Creates a TeacherClass instance from a JSON map.
   factory TeacherClass.fromJson(
       Map<String, dynamic> json, String resolvedSubjectName) {
     final List<dynamic> studentsRaw = json['students'] as List<dynamic>? ?? [];
@@ -53,7 +54,6 @@ class TeacherClass {
   }
 }
 
-/// Represents a Subject.
 class Subject {
   final String id;
   final String name;
@@ -96,7 +96,6 @@ class ClassService {
   Future<List<TeacherClass>> fetchTeacherClasses(String teacherStaffId) async {
     try {
       final Map<String, String> subjectsMap = await _fetchSubjects();
-
       final response = await http.get(Uri.parse(_classesBaseUrl));
 
       if (response.statusCode == 200) {
@@ -130,13 +129,14 @@ class ClassManagementScreen extends StatefulWidget {
   State<ClassManagementScreen> createState() => _ClassManagementScreenState();
 }
 
-/// Enum to represent the current state of the screen.
 enum ScreenState { loading, success, error, empty }
 
 class _ClassManagementScreenState extends State<ClassManagementScreen>
     with SingleTickerProviderStateMixin {
   // --- Dependencies & Services ---
   final AuthController _authController = Get.find<AuthController>();
+  final NotificationController _notificationController =
+      Get.put(NotificationController());
   final ClassService _classService = ClassService();
 
   // --- State Management ---
@@ -157,9 +157,6 @@ class _ClassManagementScreenState extends State<ClassManagementScreen>
   static final Color _skeletonBaseColor = Colors.grey.shade200;
   static final Color _skeletonHighlightColor = Colors.grey.shade100;
 
-  // --- Font Family Constant ---
-  static const String _fontFamily = AppFonts.fontFamily;
-
   @override
   void initState() {
     super.initState();
@@ -173,7 +170,6 @@ class _ClassManagementScreenState extends State<ClassManagementScreen>
     super.dispose();
   }
 
-  /// Main data loading and processing function.
   Future<void> _loadClassData() async {
     if (!mounted) return;
     setState(() => _currentState = ScreenState.loading);
@@ -206,7 +202,6 @@ class _ClassManagementScreenState extends State<ClassManagementScreen>
     }
   }
 
-  /// Filters the list of all classes to find which ones are scheduled for today.
   void _filterTodayClasses() {
     final String today = DateFormat('EEEE', 'en_US').format(DateTime.now());
     _todayClasses = _allClasses.where((classItem) {
@@ -241,21 +236,14 @@ class _ClassManagementScreenState extends State<ClassManagementScreen>
         'My Classes',
         style: TextStyle(
           color: _darkText,
-          fontFamily: _fontFamily, // Apply NotoSerifKhmer
           fontWeight: FontWeight.w700,
           fontSize: 18,
         ),
       ),
-      // Added actions for the notification icon
       actions: [
-        IconButton(
-          icon: const Icon(Icons.notifications_none_rounded,
-              color: _darkText, size: 24),
-          onPressed: () {
-            Get.toNamed(AppRoutes.studentPermission);
-          },
-        ),
-        const SizedBox(width: 8), // Add some spacing to the right
+        // **MODIFICATION**: Using the new, modern-styled badge
+        ModernNotificationBadge(controller: _notificationController),
+        const SizedBox(width: 8),
       ],
     );
   }
@@ -295,10 +283,8 @@ class _ClassManagementScreenState extends State<ClassManagementScreen>
             unselectedLabelColor: _mediumGreyText,
             indicatorColor: _primaryBlue,
             indicatorWeight: 3.0,
-            labelStyle: const TextStyle(
-                fontFamily: _fontFamily, // Apply NotoSerifKhmer
-                fontWeight: FontWeight.w600,
-                fontSize: 15),
+            labelStyle:
+                const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
             tabs: const [
               Tab(text: 'All Classes'),
               Tab(text: "Schedule's Classes"),
@@ -349,7 +335,6 @@ class _ClassManagementScreenState extends State<ClassManagementScreen>
   }
 
   Widget _buildLoadingSkeleton() {
-    // Shimmer effect doesn't render actual text, so no direct font change needed here.
     return GridView.builder(
       padding: const EdgeInsets.all(16.0),
       physics: const NeverScrollableScrollPhysics(),
@@ -385,28 +370,26 @@ class _ClassManagementScreenState extends State<ClassManagementScreen>
             const Text(
               'Failed to Load Classes',
               style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: _darkText,
-                  fontFamily: _fontFamily), // Apply NotoSerifKhmer
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: _darkText,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
               _errorMessage,
               style: const TextStyle(
-                  fontSize: 14,
-                  color: _mediumGreyText,
-                  fontFamily: _fontFamily), // Apply NotoSerifKhmer
+                fontSize: 14,
+                color: _mediumGreyText,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: _loadClassData,
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Retry',
-                  style: TextStyle(
-                      fontFamily: _fontFamily)), // Apply NotoSerifKhmer
+              label: const Text('Retry'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: _primaryBlue,
                 foregroundColor: Colors.white,
@@ -438,10 +421,10 @@ class _ClassManagementScreenState extends State<ClassManagementScreen>
             Text(
               message ?? 'No Classes Found',
               style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: _darkText,
-                  fontFamily: _fontFamily), // Apply NotoSerifKhmer
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: _darkText,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
@@ -450,9 +433,9 @@ class _ClassManagementScreenState extends State<ClassManagementScreen>
                   ? 'It looks like you haven\'t been assigned to any classes yet.'
                   : '',
               style: const TextStyle(
-                  fontSize: 14,
-                  color: _mediumGreyText,
-                  fontFamily: _fontFamily), // Apply NotoSerifKhmer
+                fontSize: 14,
+                color: _mediumGreyText,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -500,11 +483,9 @@ class _ClassManagementScreenState extends State<ClassManagementScreen>
         Text(
           title,
           style: const TextStyle(
-            fontSize: 14,
-            color: _mediumGreyText,
-            fontWeight: FontWeight.w500,
-            fontFamily: _fontFamily, // Apply NotoSerifKhmer
-          ),
+              fontSize: 14,
+              color: _mediumGreyText,
+              fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 4),
         Text(
@@ -513,7 +494,6 @@ class _ClassManagementScreenState extends State<ClassManagementScreen>
             fontSize: 32,
             fontWeight: FontWeight.bold,
             color: accentColor,
-            fontFamily: _fontFamily, // Apply NotoSerifKhmer
           ),
         ),
       ],
@@ -557,7 +537,7 @@ class _ClassManagementScreenState extends State<ClassManagementScreen>
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.school_rounded,
                     color: _primaryBlue,
                     size: 40,
@@ -569,33 +549,27 @@ class _ClassManagementScreenState extends State<ClassManagementScreen>
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: _darkText,
-                      fontFamily: _fontFamily, // Apply NotoSerifKhmer
-                    ),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: _darkText),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     classData.subjectName,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: _mediumGreyText,
-                      fontFamily: _fontFamily, // Apply NotoSerifKhmer
-                    ),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: _mediumGreyText),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     '${classData.studentIds.length} students',
                     textAlign: TextAlign.center,
                     style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: _mediumGreyText,
-                      fontFamily: _fontFamily, // Apply NotoSerifKhmer
-                    ),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: _mediumGreyText),
                   ),
                 ],
               ),
@@ -623,13 +597,99 @@ class _ClassManagementScreenState extends State<ClassManagementScreen>
         child: const Text(
           'SCHEDULE',
           style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 10,
-            letterSpacing: 0.5,
-            fontFamily: _fontFamily, // Apply NotoSerifKhmer
-          ),
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 10,
+              letterSpacing: 0.5),
         ),
+      ),
+    );
+  }
+}
+
+// --- MODIFIED WIDGET ---
+/// A notification badge styled to appear to the right of the icon.
+class ModernNotificationBadge extends StatelessWidget {
+  final NotificationController controller;
+
+  const ModernNotificationBadge({Key? key, required this.controller})
+      : super(key: key);
+
+  // Define constants for theme consistency
+  static const Color _darkText = Color(0xFF2C3E50);
+  static const Color _badgeColor = Color(0xFFE74C3C); // Red color for the badge
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Stack(
+        clipBehavior:
+            Clip.none, // Allow the badge to be drawn outside the Stack
+        children: [
+          // The base icon, which changes state
+          IconButton(
+            icon: Obx(() {
+              return Icon(
+                controller.pendingPermissionCount.value > 0
+                    ? Icons
+                        .notifications_active_rounded // Use a more distinct icon
+                    : Icons.notifications_none_rounded,
+                color: _darkText,
+                size: 28,
+              );
+            }),
+            onPressed: () {
+              Get.toNamed(AppRoutes.studentPermission);
+            },
+          ),
+
+          // The reactive badge part
+          Obx(() {
+            final count = controller.pendingPermissionCount.value;
+            return AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              transitionBuilder: (Widget child, Animation<double> animation) {
+                return ScaleTransition(
+                  scale: animation,
+                  child: FadeTransition(opacity: animation, child: child),
+                );
+              },
+              child: count > 0
+                  ? Positioned(
+                      key: const ValueKey('badge'),
+                      // **MODIFICATION**: Adjust position to be outside and to the right
+                      top: 12.0, // Adjusted for better vertical alignment
+                      right:
+                          -8.0, // Negative value pushes the widget to the right
+                      child: IgnorePointer(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6.0, vertical: 2.0),
+                          decoration: BoxDecoration(
+                            color: _badgeColor, // Use the defined color
+                            borderRadius: BorderRadius.circular(12.0),
+                            border: Border.all(color: Colors.white, width: 1.5),
+                          ),
+                          constraints: const BoxConstraints(
+                            minHeight: 20,
+                            minWidth: 20,
+                          ),
+                          child: Text(
+                            controller.formattedPendingCount,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                    )
+                  : const SizedBox.shrink(key: ValueKey('empty')),
+            );
+          }),
+        ],
       ),
     );
   }

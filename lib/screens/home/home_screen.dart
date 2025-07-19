@@ -257,11 +257,7 @@ class _HomeScreenState extends State<HomeScreen>
               ),
             ],
           ),
-          const Positioned(
-            bottom: 24,
-            right: 24,
-            child: DraggableMessageButton(),
-          ),
+          DraggableNotificationButton(),
         ],
       ),
     );

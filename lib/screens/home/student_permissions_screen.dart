@@ -1,11 +1,12 @@
+// lib/screens/student_permissions_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:school_management_system_teacher_app/utils/app_colors.dart';
-import 'package:shimmer/shimmer.dart'; // For skeleton loading
+import 'package:shimmer/shimmer.dart';
 import 'package:school_management_system_teacher_app/controllers/student_permission_controller.dart';
-import 'package:school_management_system_teacher_app/models/permission_item.dart'; // Import PermissionItem
-import 'package:school_management_system_teacher_app/Widget/super_profile_picture.dart'; // Assuming SuperProfilePicture is defined and accessible
+import 'package:school_management_system_teacher_app/models/permission_item.dart';
+import 'package:school_management_system_teacher_app/Widget/super_profile_picture.dart';
 
 class StudentPermissionsScreen extends StatelessWidget {
   final String classId;
@@ -23,6 +24,7 @@ class StudentPermissionsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Find the controller instance. Ensure it's already put by a previous screen or in your main binding.
     final StudentPermissionController controller =
         Get.find<StudentPermissionController>();
 
@@ -42,19 +44,22 @@ class StudentPermissionsScreen extends StatelessWidget {
               } else if (controller.studentPermissions.isEmpty) {
                 return _buildEmptyState();
               } else {
-                return ListView.separated(
-                  padding: const EdgeInsets.all(16.0),
-                  itemCount: controller.studentPermissions.length,
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    final permission = controller.studentPermissions[index];
-                    return StudentPermissionCard(
-                      permission: permission,
-                      controller: controller,
-                      classId: classId,
-                    );
-                  },
+                return RefreshIndicator(
+                  color: AppColors.primaryBlue,
+                  onRefresh: () => controller.fetchStudentPermissions(),
+                  child: ListView.separated(
+                    padding: const EdgeInsets.all(16.0),
+                    itemCount: controller.studentPermissions.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final permission = controller.studentPermissions[index];
+                      return StudentPermissionCard(
+                        permission: permission,
+                        controller: controller,
+                      );
+                    },
+                  ),
                 );
               }
             }),
@@ -64,7 +69,6 @@ class StudentPermissionsScreen extends StatelessWidget {
     );
   }
 
-  /// Builds the AppBar for the Student Permissions screen.
   AppBar _buildAppBar() {
     return AppBar(
       backgroundColor: AppColors.primaryBlue,
@@ -87,7 +91,6 @@ class StudentPermissionsScreen extends StatelessWidget {
     );
   }
 
-  /// Builds the header section displaying class info and permission counts.
   Widget _buildHeader(StudentPermissionController controller) {
     return Container(
       color: AppColors.primaryBlue,
@@ -126,7 +129,6 @@ class StudentPermissionsScreen extends StatelessWidget {
     );
   }
 
-  /// Helper to build a single count badge with improved styling.
   Widget _buildCountBadge(String title, String count, Color color) {
     return Container(
       decoration: BoxDecoration(
@@ -172,7 +174,6 @@ class StudentPermissionsScreen extends StatelessWidget {
     );
   }
 
-  /// Builds a list of shimmering skeleton loaders for the loading state.
   Widget _buildShimmerList() {
     return Shimmer.fromColors(
       baseColor: AppColors.skeletonBaseColor,
@@ -186,74 +187,35 @@ class StudentPermissionsScreen extends StatelessWidget {
     );
   }
 
-  /// Builds a single skeleton loader item for a permission card.
   Widget _buildPermissionCardSkeleton() {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.borderGrey.withOpacity(0.2),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(children: [
-            Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: AppColors.skeletonHighlightColor,
-                  shape: BoxShape.circle,
-                )),
+            const CircleAvatar(radius: 24),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                      height: 16,
-                      width: double.infinity,
-                      color: AppColors.skeletonHighlightColor),
+                  Container(height: 16, width: 150, color: Colors.white),
                   const SizedBox(height: 4),
-                  Container(
-                      height: 13,
-                      width: 100,
-                      color: AppColors.skeletonHighlightColor),
+                  Container(height: 13, width: 100, color: Colors.white),
                 ],
               ),
             ),
-            const SizedBox(width: 8),
-            Container(
-                height: 20, width: 70, color: AppColors.skeletonHighlightColor),
-            const SizedBox(width: 8),
-            Container(
-                height: 24,
-                width: 24,
-                color: AppColors.skeletonHighlightColor,
-                child: const Icon(Icons.arrow_forward_ios_rounded,
-                    color: Colors.transparent)),
           ]),
-          const SizedBox(height: 16),
-          Container(
-              height: 16,
-              width: double.infinity,
-              color: AppColors.skeletonHighlightColor),
-          const SizedBox(height: 8),
-          Container(
-              height: 16, width: 150, color: AppColors.skeletonHighlightColor),
         ],
       ),
     );
   }
 
-  /// Builds the error state view when data fetching fails.
   Widget _buildErrorState(String errorMessage, VoidCallback onRetry) {
     return Center(
       child: Padding(
@@ -264,40 +226,23 @@ class StudentPermissionsScreen extends StatelessWidget {
             const Icon(Icons.cloud_off_rounded,
                 color: AppColors.declineRed, size: 60),
             const SizedBox(height: 16),
-            Text(
-              'Failed to Load Permissions',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.darkText,
-                fontFamily: AppFonts.fontFamily,
-              ),
-              textAlign: TextAlign.center,
-            ),
+            Text('Failed to Load Permissions',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: AppFonts.fontFamily)),
             const SizedBox(height: 8),
-            Text(
-              errorMessage,
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.mediumText,
-                fontFamily: AppFonts.fontFamily,
-              ),
-              textAlign: TextAlign.center,
-            ),
+            Text(errorMessage,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.mediumText,
+                    fontFamily: AppFonts.fontFamily)),
             const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Retry',
-                  style: TextStyle(fontFamily: AppFonts.fontFamily)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryBlue,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-              ),
+              label: const Text('Retry'),
             ),
           ],
         ),
@@ -305,7 +250,6 @@ class StudentPermissionsScreen extends StatelessWidget {
     );
   }
 
-  /// Builds the empty state view when there are no permissions to display.
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
@@ -321,21 +265,18 @@ class StudentPermissionsScreen extends StatelessWidget {
             const Text(
               'No Student Permissions Found',
               style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.darkText,
-                fontFamily: AppFonts.fontFamily,
-              ),
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: AppFonts.fontFamily),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             const Text(
               'There are no permission requests from students for you at the moment.',
               style: TextStyle(
-                fontSize: 14,
-                color: AppColors.mediumText,
-                fontFamily: AppFonts.fontFamily,
-              ),
+                  fontSize: 14,
+                  color: AppColors.mediumText,
+                  fontFamily: AppFonts.fontFamily),
               textAlign: TextAlign.center,
             ),
           ],
@@ -345,27 +286,23 @@ class StudentPermissionsScreen extends StatelessWidget {
   }
 }
 
-/// A custom widget to display a single student permission request.
 class StudentPermissionCard extends StatelessWidget {
   final PermissionItem permission;
   final StudentPermissionController controller;
-  final String classId;
 
   const StudentPermissionCard({
     Key? key,
     required this.permission,
     required this.controller,
-    required this.classId,
   }) : super(key: key);
 
-  /// Determines the color for permission status text and background.
   Color _getStatusColor(String status, {bool isBackground = false}) {
     switch (status.toLowerCase()) {
       case "pending":
         return isBackground
             ? AppColors.pendingOrange.withOpacity(0.1)
             : AppColors.pendingOrange;
-      case "accepted":
+      case "accepted": // <-- FIX: Was "accepted"
         return isBackground
             ? AppColors.successGreen.withOpacity(0.1)
             : AppColors.successGreen;
@@ -379,137 +316,6 @@ class StudentPermissionCard extends StatelessWidget {
     }
   }
 
-  /// Builds a detailed row with an icon, label, and value.
-  Widget _buildDetailRow(IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-          vertical: 4.0), // Slightly reduced vertical padding
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 20, color: AppColors.mediumText),
-          const SizedBox(width: 10),
-          Expanded(
-            child: RichText(
-              text: TextSpan(
-                children: [
-                  TextSpan(
-                    text: label,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.darkText,
-                      fontFamily: AppFonts.fontFamily,
-                    ),
-                  ),
-                  TextSpan(
-                    text: ' $value',
-                    style: const TextStyle(
-                      color: AppColors.mediumText,
-                      fontFamily: AppFonts.fontFamily,
-                    ),
-                  ),
-                ],
-              ),
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Builds the expanded details section of the permission card.
-  Widget _buildExpandedDetails(PermissionItem permission) {
-    return AnimatedSize(
-      // Wrap with AnimatedSize for smooth expansion
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Divider(height: 32, thickness: 1, color: AppColors.borderGrey),
-          const Text(
-            "Permission Detail",
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 16,
-              color: AppColors.darkText,
-              fontFamily: AppFonts.fontFamily,
-            ),
-          ),
-          const SizedBox(height: 12),
-          _buildDetailRow(Icons.calendar_today_rounded, "Date:",
-              permission.formattedDateRange),
-          const SizedBox(height: 8),
-          _buildDetailRow(
-              Icons.edit_note_rounded, "Reason:", permission.reason),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              if (permission.status.toLowerCase() == "pending") ...[
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      controller.updatePermissionStatus(
-                          permission.id, "denied");
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.declineRed,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      elevation: 2,
-                    ),
-                    child: const Text("Deny",
-                        style: TextStyle(
-                            fontFamily: AppFonts.fontFamily,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600)),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      controller.updatePermissionStatus(
-                          permission.id, "approved");
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.successGreen,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      elevation: 2,
-                    ),
-                    child: const Text("Approve",
-                        style: TextStyle(
-                            fontFamily: AppFonts.fontFamily,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600)),
-                  ),
-                ),
-              ] else if (permission.status.toLowerCase() == "accepted")
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                )
-              else if (permission.status.toLowerCase() == "denied" ||
-                  permission.status.toLowerCase() == "rejected")
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final studentName = permission.studentDetails?.engName ?? 'Unknown Student';
@@ -521,13 +327,6 @@ class StudentPermissionCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppColors.cardBackground,
             borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.borderGrey.withOpacity(0.5),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
             border: Border.all(color: AppColors.borderGrey, width: 1),
           ),
           child: InkWell(
@@ -547,9 +346,6 @@ class StudentPermissionCard extends StatelessWidget {
                         imageUrl: studentAvatarUrl,
                         fullName: studentName,
                         radius: 24,
-                        backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
-                        textColor: AppColors.darkText,
-                        fontFamily: AppFonts.fontFamily,
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -559,21 +355,12 @@ class StudentPermissionCard extends StatelessWidget {
                             Text(
                               studentName,
                               style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.darkText,
-                                fontFamily: AppFonts.fontFamily,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
+                                  fontSize: 16, fontWeight: FontWeight.w600),
                             ),
                             Text(
                               'Gender: $studentGender',
                               style: const TextStyle(
-                                fontSize: 13,
-                                color: AppColors.mediumText,
-                                fontFamily: AppFonts.fontFamily,
-                              ),
+                                  fontSize: 13, color: AppColors.mediumText),
                             ),
                           ],
                         ),
@@ -593,7 +380,6 @@ class StudentPermissionCard extends StatelessWidget {
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                             color: _getStatusColor(permission.status),
-                            fontFamily: AppFonts.fontFamily,
                           ),
                         ),
                       ),
@@ -614,5 +400,83 @@ class StudentPermissionCard extends StatelessWidget {
             ),
           ),
         ));
+  }
+
+  Widget _buildExpandedDetails(PermissionItem permission) {
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Divider(height: 32, thickness: 1, color: AppColors.borderGrey),
+          const Text(
+            "Permission Detail",
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+          ),
+          const SizedBox(height: 12),
+          _buildDetailRow(Icons.calendar_today_rounded, "Date:",
+              permission.formattedDateRange),
+          const SizedBox(height: 8),
+          _buildDetailRow(
+              Icons.edit_note_rounded, "Reason:", permission.reason),
+          const SizedBox(height: 20),
+          if (permission.status.toLowerCase() == "pending")
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // UPDATE: Pass the full permission object
+                      controller.updatePermissionStatus(permission, "rejected");
+                    },
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.declineRed,
+                        foregroundColor: Colors.white),
+                    child: const Text("Rejecte"),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // UPDATE: Pass the full permission object
+                      controller.updatePermissionStatus(permission, "accepted");
+                    },
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.successGreen,
+                        foregroundColor: Colors.white),
+                    child: const Text("Accepte"),
+                  ),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(IconData icon, String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 20, color: AppColors.mediumText),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                    text: '$label ',
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
+                TextSpan(
+                    text: value,
+                    style: const TextStyle(color: AppColors.mediumText)),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
