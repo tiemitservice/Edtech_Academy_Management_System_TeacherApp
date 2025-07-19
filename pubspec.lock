@@ -861,6 +861,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.10.0"
+  splash:
+    dependency: "direct main"
+    description:
+      name: splash
+      sha256: b0e03a50b923fb8978710e2201978f9ed3aea7c47a535e55e1458a342fe35af6
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.2.0"
   sprintf:
     dependency: transitive
     description:

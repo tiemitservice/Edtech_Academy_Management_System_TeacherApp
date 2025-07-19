@@ -669,17 +669,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     TextStyle(fontFamily: _fontFamily)), // Apply NotoSerifKhmer
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
-              Get.snackbar(
-                  'Coming Soon', 'Settings screen is under development!',
-                  snackPosition: SnackPosition.BOTTOM,
-                  backgroundColor: _primaryBlue.withOpacity(0.8),
-                  colorText: Colors.white,
-                  messageText: Text('Settings screen is under development!',
-                      style: const TextStyle(
-                          fontFamily: _fontFamily, color: Colors.white)),
-                  titleText: Text('Coming Soon',
-                      style: const TextStyle(
-                          fontFamily: _fontFamily, color: Colors.white)));
+              Get.toNamed('/settings');
             },
           ),
           const Divider(height: 1),
