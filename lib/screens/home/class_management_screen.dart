@@ -606,90 +606,141 @@ class _ClassManagementScreenState extends State<ClassManagementScreen>
     );
   }
 }
+// --- NOTIFICATION WIDGET (ANIMATING THE ENTIRE BELL ICON) ---
 
-// --- MODIFIED WIDGET ---
-/// A notification badge styled to appear to the right of the icon.
-class ModernNotificationBadge extends StatelessWidget {
+class ModernNotificationBadge extends StatefulWidget {
   final NotificationController controller;
 
   const ModernNotificationBadge({Key? key, required this.controller})
       : super(key: key);
 
-  // Define constants for theme consistency
+  @override
+  State<ModernNotificationBadge> createState() =>
+      _ModernNotificationBadgeState();
+}
+
+class _ModernNotificationBadgeState extends State<ModernNotificationBadge>
+    with SingleTickerProviderStateMixin {
   static const Color _darkText = Color(0xFF2C3E50);
-  static const Color _badgeColor = Color(0xFFE74C3C); // Red color for the badge
+  static const Color _badgeColor = Color(0xFFE74C3C);
+
+  late final AnimationController _animationController;
+  late final Animation<double> _rotationAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    );
+
+    _rotationAnimation = TweenSequence<double>([
+      TweenSequenceItem(
+          tween: Tween<double>(begin: 0.0, end: 0.12), weight: 10),
+      TweenSequenceItem(
+          tween: Tween<double>(begin: 0.12, end: -0.12), weight: 10),
+      TweenSequenceItem(
+          tween: Tween<double>(begin: -0.12, end: 0.12), weight: 10),
+      TweenSequenceItem(
+          tween: Tween<double>(begin: 0.12, end: 0.0), weight: 10),
+      TweenSequenceItem(tween: ConstantTween<double>(0.0), weight: 60),
+    ]).animate(_animationController);
+
+    widget.controller.pendingPermissionCount.listen((count) {
+      if (!mounted) return;
+      if (count > 0) {
+        _animationController.repeat();
+      } else {
+        _animationController.stop();
+        _animationController.reset();
+      }
+    });
+
+    if (widget.controller.pendingPermissionCount.value > 0) {
+      _animationController.repeat();
+    }
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Stack(
-        clipBehavior:
-            Clip.none, // Allow the badge to be drawn outside the Stack
-        children: [
-          // The base icon, which changes state
-          IconButton(
-            icon: Obx(() {
-              return Icon(
-                controller.pendingPermissionCount.value > 0
-                    ? Icons
-                        .notifications_active_rounded // Use a more distinct icon
-                    : Icons.notifications_none_rounded,
-                color: _darkText,
-                size: 28,
-              );
-            }),
-            onPressed: () {
-              Get.toNamed(AppRoutes.studentPermission);
-            },
-          ),
-
-          // The reactive badge part
-          Obx(() {
-            final count = controller.pendingPermissionCount.value;
-            return AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              transitionBuilder: (Widget child, Animation<double> animation) {
-                return ScaleTransition(
-                  scale: animation,
-                  child: FadeTransition(opacity: animation, child: child),
+      // The AnimatedBuilder wraps everything that needs to animate.
+      child: AnimatedBuilder(
+        animation: _animationController,
+        builder: (context, child) {
+          return Transform.rotate(
+            angle: _rotationAnimation.value,
+            alignment: Alignment.topCenter,
+            child: child,
+          );
+        },
+        // The child is the entire Stack.
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            // This IconButton contains the Icon, so it will be animated.
+            IconButton(
+              icon: Obx(() {
+                return Icon(
+                  widget.controller.pendingPermissionCount.value > 0
+                      ? Icons.notifications_active_rounded
+                      : Icons.notifications_none_rounded,
+                  color: _darkText,
+                  size: 28,
                 );
+              }),
+              onPressed: () {
+                Get.toNamed(AppRoutes.studentPermission);
               },
-              child: count > 0
-                  ? Positioned(
-                      key: const ValueKey('badge'),
-                      // **MODIFICATION**: Adjust position to be outside and to the right
-                      top: 12.0, // Adjusted for better vertical alignment
-                      right:
-                          -8.0, // Negative value pushes the widget to the right
-                      child: IgnorePointer(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6.0, vertical: 2.0),
-                          decoration: BoxDecoration(
-                            color: _badgeColor, // Use the defined color
-                            borderRadius: BorderRadius.circular(12.0),
-                            border: Border.all(color: Colors.white, width: 1.5),
-                          ),
-                          constraints: const BoxConstraints(
-                            minHeight: 20,
-                            minWidth: 20,
-                          ),
-                          child: Text(
-                            controller.formattedPendingCount,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
+            ),
+            // The Positioned badge also gets animated as part of the Stack.
+            Positioned.directional(
+              textDirection: Directionality.of(context),
+              top: 6.0,
+              end: 4.0,
+              child: Obx(() {
+                if (widget.controller.pendingPermissionCount.value == 0) {
+                  return const SizedBox.shrink();
+                }
+                return IgnorePointer(
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                    constraints:
+                        const BoxConstraints(minWidth: 18, minHeight: 18),
+                    decoration: BoxDecoration(
+                      color: _badgeColor,
+                      borderRadius: BorderRadius.circular(10.0),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 3,
+                          offset: const Offset(1, 1),
                         ),
+                      ],
+                    ),
+                    child: Text(
+                      widget.controller.formattedPendingCount,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
                       ),
-                    )
-                  : const SizedBox.shrink(key: ValueKey('empty')),
-            );
-          }),
-        ],
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ],
+        ),
       ),
     );
   }
