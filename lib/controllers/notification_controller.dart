@@ -17,7 +17,7 @@ class NotificationController extends GetxController {
     super.onInit();
     _fetchPendingPermissions();
     // Fetch pending permissions every 30 seconds (adjust as needed)
-    _timer = Timer.periodic(const Duration(seconds: 30), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       _fetchPendingPermissions();
     });
   }
