@@ -45,7 +45,7 @@ class _EditPermissionSheetScreenState extends State<EditPermissionSheetScreen> {
   bool _isLoading = false;
 
   static const String _apiUrl =
-      'https://edtech-academy-management-system-server.onrender.com/api/staffpermissions';
+      'http://188.166.242.109:5000/api/staffpermissions';
   late final AuthController _authController;
 
   @override

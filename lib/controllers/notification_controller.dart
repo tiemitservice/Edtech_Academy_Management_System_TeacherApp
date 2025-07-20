@@ -5,7 +5,8 @@ import 'package:school_management_system_teacher_app/controllers/auth_controller
 import 'dart:async'; // For Timer
 
 class NotificationController extends GetxController {
-  final StudentPermissionService _permissionService = Get.find<StudentPermissionService>();
+  final StudentPermissionService _permissionService =
+      Get.find<StudentPermissionService>();
   final AuthController _authController = Get.find<AuthController>();
 
   final RxInt pendingPermissionCount = 0.obs;
@@ -31,18 +32,22 @@ class NotificationController extends GetxController {
     try {
       final teacherStaffId = await _authController.getStaffId();
       if (teacherStaffId.isEmpty) {
-        print('NotificationController: Teacher Staff ID not found. Cannot fetch pending permissions.');
+        print(
+            'NotificationController: Teacher Staff ID not found. Cannot fetch pending permissions.');
         pendingPermissionCount.value = 0; // Reset count if not logged in
         return;
       }
 
       final allPermissions = await _permissionService.fetchAllPermissions();
       final pendingCount = allPermissions
-          .where((p) => p.sentToStaffId == teacherStaffId && p.status.toLowerCase() == 'pending')
+          .where((p) =>
+              p.sentToStaffId == teacherStaffId &&
+              p.status.toLowerCase() == 'pending')
           .length;
 
       pendingPermissionCount.value = pendingCount;
-      print('NotificationController: Fetched $pendingCount pending permissions.');
+      print(
+          'NotificationController: Fetched $pendingCount pending permissions.');
     } catch (e) {
       print('NotificationController: Error fetching pending permissions: $e');
       pendingPermissionCount.value = 0; // Reset count on error

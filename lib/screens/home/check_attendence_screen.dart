@@ -321,7 +321,7 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
 
   Future<List<Student>> _fetchFilteredClassStudents() async {
     final uri = Uri.parse(
-        'https://edtech-academy-management-system-server.onrender.com/api/classes');
+        'http://188.166.242.109:5000/api/classes');
     final staffId = await _authController.getStaffId();
     final token = await _authController.getToken();
 
@@ -486,7 +486,7 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
     }).toList();
 
     final updateClassUrl = Uri.parse(
-        'https://edtech-academy-management-system-server.onrender.com/api/classes/${widget.classId}');
+        'http://188.166.242.109:5000/api/classes/${widget.classId}');
     final updateClassBody = jsonEncode({'students': studentsUpdateData});
 
     print('--- Submitting All Attendance (PATCH Class) ---');
@@ -517,7 +517,7 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
     }).toList();
 
     final createReportUrl = Uri.parse(
-        'https://edtech-academy-management-system-server.onrender.com/api/attendancereports');
+        'http://188.166.242.109:5000/api/attendancereports');
     final createReportBody = jsonEncode({
       'class_id': widget.classId,
       'subject_id': _currentSubjectId,

@@ -19,7 +19,7 @@ class PermissionController extends GetxController {
 
   // API Endpoint
   static const String _apiUrl =
-      'https://edtech-academy-management-system-server.onrender.com/api/staffpermissions';
+      'http://188.166.242.109:5000/api/staffpermissions';
 
   // AuthController instance to get the staff ID.
   // 'late final' means it will be initialized before its first use.

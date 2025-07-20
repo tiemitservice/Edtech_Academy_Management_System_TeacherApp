@@ -70,9 +70,9 @@ class Subject {
 
 class ClassService {
   final String _classesBaseUrl =
-      'https://edtech-academy-management-system-server.onrender.com/api/classes';
+      'http://188.166.242.109:5000/api/classes';
   final String _subjectsBaseUrl =
-      'https://edtech-academy-management-system-server.onrender.com/api/subjects';
+      'http://188.166.242.109:5000/api/subjects';
 
   Future<Map<String, String>> _fetchSubjects() async {
     try {

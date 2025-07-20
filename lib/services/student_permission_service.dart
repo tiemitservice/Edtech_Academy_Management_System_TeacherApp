@@ -7,9 +7,9 @@ import 'package:school_management_system_teacher_app/models/permission_report.da
 /// A service class for managing student permission requests.
 class StudentPermissionService {
   final String _permissionsBaseUrl =
-      'https://edtech-academy-management-system-server.onrender.com/api/student_permissions';
+      'http://188.166.242.109:5000/api/student_permissions';
   final String _reportsBaseUrl =
-      'https://edtech-academy-management-system-server.onrender.com/api/studentpermissionreports';
+      'http://188.166.242.109:5000/api/studentpermissionreports';
 
   /// Fetches all student permission requests.
   /// Returns a list of [PermissionItem] objects.

@@ -6,9 +6,9 @@ import 'package:school_management_system_teacher_app/models/class.dart'; // <---
 /// A service class for fetching class data from the API.
 class ClassService {
   final String _classesBaseUrl =
-      'https://edtech-academy-management-system-server.onrender.com/api/classes';
+      'http://188.166.242.109:5000/api/classes';
   final String _subjectsBaseUrl =
-      'https://edtech-academy-management-system-server.onrender.com/api/subjects';
+      'http://188.166.242.109:5000/api/subjects';
 
   /// Fetches all subjects and returns them as a map for easy lookup.
   Future<Map<String, String>> _fetchSubjects() async {

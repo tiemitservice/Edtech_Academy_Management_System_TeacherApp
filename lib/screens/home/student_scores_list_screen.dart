@@ -74,7 +74,7 @@ class _StudentScoresListScreenState extends State<StudentScoresListScreen> {
     // The API endpoint fetches all classes. We need to find the one with the matching classId.
     // A more efficient API would be `/api/classes/{classId}`
     final Uri url = Uri.parse(
-        'https://edtech-academy-management-system-server.onrender.com/api/classes');
+        'http://188.166.242.109:5000/api/classes');
 
     try {
       final response =

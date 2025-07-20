@@ -318,7 +318,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     try {
       final uri = Uri.parse(
-          'https://edtech-academy-management-system-server.onrender.com/api/positions');
+          'http://188.166.242.109:5000/api/positions');
       final response = await http.get(uri);
 
       if (response.statusCode == 200) {
@@ -394,7 +394,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       }
 
       final uri = Uri.parse(
-          'https://edtech-academy-management-system-server.onrender.com/api/staffs?email=$email');
+          'http://188.166.242.109:5000/api/staffs?email=$email');
       final response = await http.get(uri);
 
       if (response.statusCode == 200) {
@@ -777,7 +777,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     try {
       final uri = Uri.parse(
-          'https://edtech-academy-management-system-server.onrender.com/api/staffs/$userId');
+          'http://188.166.242.109:5000/api/staffs/$userId');
       print("DEBUG: _updateProfile: Target URI: $uri");
 
       var request = http.MultipartRequest('PATCH', uri);

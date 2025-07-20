@@ -129,7 +129,7 @@ class _StudentScoreInputScreenState extends State<StudentScoreInputScreen> {
     // The API endpoint to update a student's score and attendance.
     // This uses the student's unique ID.
     final url = Uri.parse(
-        'https://edtech-academy-management-system-server.onrender.com/api/students/${widget.student.id}');
+        'http://188.166.242.109:5000/api/students/${widget.student.id}');
 
     try {
       final body = json.encode({

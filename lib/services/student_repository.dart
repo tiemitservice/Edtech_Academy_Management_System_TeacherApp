@@ -8,7 +8,7 @@ import 'package:school_management_system_teacher_app/models/student.dart';
 /// This helps avoid multiple API calls for the same student.
 class StudentRepository extends GetxService {
   final String _baseUrl =
-      'https://edtech-academy-management-system-server.onrender.com/api/students';
+      'http://188.166.242.109:5000/api/students';
   final Map<String, Student> _studentsCache = {}; // Cache student data by ID
   final RxBool _isFetchingAllStudents =
       false.obs; // To prevent multiple simultaneous fetches

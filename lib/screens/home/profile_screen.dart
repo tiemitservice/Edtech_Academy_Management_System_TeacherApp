@@ -102,7 +102,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
 
       final response = await http.get(Uri.parse(
-          'https://edtech-academy-management-system-server.onrender.com/api/staffs?email=$userEmail'));
+          'http://188.166.242.109:5000/api/staffs?email=$userEmail'));
       print(
           "DEBUG: ProfileScreen _fetchUserProfile: API Response Status: ${response.statusCode}");
       print(

@@ -96,7 +96,7 @@ class _HomeScreenState extends State<HomeScreen>
       }
 
       final response = await http.get(Uri.parse(
-          'https://edtech-academy-management-system-server.onrender.com/api/staffs'));
+          'http://188.166.242.109:5000/api/staffs'));
 
       if (!mounted) return;
 
@@ -143,7 +143,7 @@ class _HomeScreenState extends State<HomeScreen>
   Future<void> _fetchSubjects() async {
     try {
       final response = await http.get(Uri.parse(
-          'https://edtech-academy-management-system-server.onrender.com/api/subjects'));
+          'http://188.166.242.109:5000/api/subjects'));
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
         final List<dynamic> subjectsApi = jsonData['data'];
@@ -173,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen>
 
     try {
       final response = await http.get(Uri.parse(
-          'https://edtech-academy-management-system-server.onrender.com/api/classes'));
+          'http://188.166.242.109:5000/api/classes'));
 
       if (!mounted) return;
 
