@@ -201,10 +201,9 @@ class _SignInScreenState extends State<SignInScreen> {
     setState(() => _isLoading = true);
 
     final loginUrl = Uri.parse(
-      'https://edtech-academy-management-system-server.onrender.com/api/login',
+      'http://188.166.242.109:5000/api/login',
     );
-    final staffUrl = Uri.parse(
-        'https://edtech-academy-management-system-server.onrender.com/api/staffs');
+    final staffUrl = Uri.parse('http://188.166.242.109:5000/api/staffs');
     final data = {'email': email, 'password': password};
     final AuthController _authController = AuthController();
 
@@ -398,9 +397,9 @@ class _SignInScreenState extends State<SignInScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    validator: (value) => value == null || value.trim().isEmpty
-                        ? 'Password is required' // Validation message will inherit theme font or fallback
-                        : null,
+                    // validator: (value) => value == null || value.trim().isEmpty
+                    //     ? 'Password is required' // Validation message will inherit theme font or fallback
+                    //     : null,
                   ),
                   const SizedBox(height: 10),
 
