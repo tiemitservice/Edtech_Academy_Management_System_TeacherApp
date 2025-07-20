@@ -7,7 +7,6 @@ import 'package:school_management_system_teacher_app/models/student.dart';
 const String _apiBaseUrl =
     'https://edtech-academy-management-system-server.onrender.com/api';
 
-/// A data class to hold the list of students and their total count for a specific class.
 class StudentsByClassResult {
   final List<Student> students;
   final int totalStudentsCount;
@@ -17,26 +16,22 @@ class StudentsByClassResult {
 }
 
 class StudentListService extends GetxService {
-  /// Fetches a list of students for a specific class, filtered by classId and staffId.
-  /// Returns a StudentsByClassResult containing the list of students and their count.
   Future<StudentsByClassResult> fetchStudentsForClass({
     required String classId,
-    required String staffId, // This parameter is crucial and correctly used
+    required String staffId,
   }) async {
     try {
-      // Fetch from classes API
       final response = await http.get(Uri.parse('$_apiBaseUrl/classes'));
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
         final List<dynamic> allClassesData =
-            responseData['data']; // Access the 'data' array
+            responseData['data'];
 
-        // Find the specific class that matches both classId and staffId
         final classJson = allClassesData.firstWhere(
           (c) =>
               c['_id'] == classId &&
-              c['staff'] == staffId, // Filtering by both IDs
+              c['staff'] == staffId,
           orElse: () => throw Exception(
               'Class not found or teacher not assigned to this class.'),
         );
@@ -44,15 +39,18 @@ class StudentListService extends GetxService {
         final List<Student> studentsInClass = [];
         if (classJson['students'] is List) {
           for (var studentEntry in classJson['students']) {
-            if (studentEntry['student'] is Map<String, dynamic>) {
-              // Parse the nested 'student' object into your Student model
-              final Student student = Student.fromJson(studentEntry['student']);
-              studentsInClass.add(student);
+            // ✅ FIX: Added a try-catch block to skip invalid student records.
+            try {
+              if (studentEntry is Map<String, dynamic>) {
+                final Student student = Student.fromJson(studentEntry);
+                studentsInClass.add(student);
+              }
+            } catch (e) {
+              print('Skipping invalid student record in class ${classJson['name']}: $e');
             }
           }
         }
 
-        // Return the students and their count
         return StudentsByClassResult(
           students: studentsInClass,
           totalStudentsCount: studentsInClass.length,

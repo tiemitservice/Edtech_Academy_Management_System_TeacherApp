@@ -1,14 +1,13 @@
+// lib/controllers/student_info_controller.dart
 import 'package:get/get.dart';
-import 'package:flutter/material.dart'; // Added for Colors in SnackBar
+import 'package:flutter/material.dart';
 import 'package:school_management_system_teacher_app/models/student.dart';
 import 'package:school_management_system_teacher_app/services/student_info_service.dart';
 import 'package:school_management_system_teacher_app/utils/app_colors.dart';
 import 'package:school_management_system_teacher_app/services/address_service.dart';
-import 'package:flutter/foundation.dart'; // For debugPrint
+import 'package:flutter/foundation.dart';
 
 class StudentInfoController extends GetxController {
-  // Ensure these services are correctly registered with Get.put or Get.lazyPut
-  // For example, in your AppBindings or main.dart
   final StudentInfoService _studentInfoService = Get.find<StudentInfoService>();
   final AddressService _addressService = Get.find<AddressService>();
 
@@ -19,13 +18,11 @@ class StudentInfoController extends GetxController {
 
   final String studentId;
 
-  // Constructor now requires studentId as before
   StudentInfoController({required this.studentId});
 
   @override
   void onInit() {
     super.onInit();
-    // Fetch student details when the controller is initialized
     fetchStudentDetails();
   }
 
@@ -33,7 +30,7 @@ class StudentInfoController extends GetxController {
     isLoading.value = true;
     errorMessage.value = '';
     student.value = null;
-    fullAddress.value = ''; // Clear previous address
+    fullAddress.value = '';
 
     debugPrint(
         'StudentInfoController: Attempting to fetch student details for ID: $studentId');
@@ -44,24 +41,13 @@ class StudentInfoController extends GetxController {
       student.value = fetchedStudent;
 
       if (student.value != null) {
-        debugPrint(
-            'StudentInfoController: Raw address IDs from student API response:');
-        debugPrint('   Village ID: ${student.value!.village}');
-        debugPrint('   Commune ID: ${student.value!.commune}');
-        debugPrint('   District ID: ${student.value!.district}');
-        debugPrint('   Province ID: ${student.value!.province}');
-
         List<String> parts = [];
-
-        // --- Refined Address Construction Logic ---
-        // 1. Prioritize the direct 'address' string from the student model
         final rawAddress = student.value!.address;
         if (rawAddress != null &&
             rawAddress.isNotEmpty &&
             !rawAddress.toLowerCase().contains('undefined')) {
           fullAddress.value = rawAddress;
         } else {
-          // 2. If raw address is not good, try building from geographical IDs
           final villageName =
               _addressService.getVillageName(student.value!.village);
           final communeName =
@@ -83,15 +69,10 @@ class StudentInfoController extends GetxController {
           fullAddress.value = parts.join(', ');
         }
 
-        // 3. If after all attempts, address is still empty, set default message
         if (fullAddress.value.isEmpty) {
           fullAddress.value = 'Address not available';
         }
-
-        debugPrint(
-            'StudentInfoController: Constructed Full Address: "${fullAddress.value}"');
       } else {
-        // If student.value is null, address is definitively not available from the detailed fetch
         fullAddress.value = 'Address not available';
       }
 
@@ -107,9 +88,8 @@ class StudentInfoController extends GetxController {
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: AppColors.declineRed,
         colorText: Colors.white,
-        margin:
-            const EdgeInsets.all(10), // Add some margin for better appearance
-        borderRadius: 8, // Add border radius
+        margin: const EdgeInsets.all(10),
+        borderRadius: 8,
       );
     } finally {
       isLoading.value = false;
