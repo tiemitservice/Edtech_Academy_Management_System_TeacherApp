@@ -101,8 +101,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         return;
       }
 
-      final response = await http.get(Uri.parse(
-          'http://188.166.242.109:5000/api/staffs?email=$userEmail'));
+      final response = await http.get(
+          Uri.parse('http://188.166.242.109:5000/api/staffs?email=$userEmail'));
       print(
           "DEBUG: ProfileScreen _fetchUserProfile: API Response Status: ${response.statusCode}");
       print(
@@ -661,27 +661,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
               });
             },
           ),
-          const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.settings),
-            title: const Text('Settings',
-                style:
-                    TextStyle(fontFamily: _fontFamily)), // Apply NotoSerifKhmer
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () {
-              Get.snackbar(
-                  'Coming Soon', 'Settings screen is under development!',
-                  snackPosition: SnackPosition.BOTTOM,
-                  backgroundColor: _primaryBlue.withOpacity(0.8),
-                  colorText: Colors.white,
-                  messageText: Text('Settings screen is under development!',
-                      style: const TextStyle(
-                          fontFamily: _fontFamily, color: Colors.white)),
-                  titleText: Text('Coming Soon',
-                      style: const TextStyle(
-                          fontFamily: _fontFamily, color: Colors.white)));
-            },
-          ),
+          // const Divider(height: 1),
+          // ListTile(
+          //   leading: const Icon(Icons.settings),
+          //   title: const Text('Settings',
+          //       style:
+          //           TextStyle(fontFamily: _fontFamily)), // Apply NotoSerifKhmer
+          //   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+          //   onTap: () {
+          //     Get.snackbar(
+          //         'Coming Soon', 'Settings screen is under development!',
+          //         snackPosition: SnackPosition.BOTTOM,
+          //         backgroundColor: _primaryBlue.withOpacity(0.8),
+          //         colorText: Colors.white,
+          //         messageText: Text('Settings screen is under development!',
+          //             style: const TextStyle(
+          //                 fontFamily: _fontFamily, color: Colors.white)),
+          //         titleText: Text('Coming Soon',
+          //             style: const TextStyle(
+          //                 fontFamily: _fontFamily, color: Colors.white)));
+          //   },
+          // ),
           const Divider(height: 1),
           ListTile(
             leading: const Icon(Icons.logout_rounded, color: Colors.red),

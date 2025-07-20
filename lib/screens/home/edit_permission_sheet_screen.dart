@@ -5,11 +5,10 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/scheduler.dart';
 
-// Assuming you have this file and controller.
 import 'package:school_management_system_teacher_app/controllers/auth_controller.dart';
 import 'package:school_management_system_teacher_app/utils/app_colors.dart';
+import 'package:school_management_system_teacher_app/controllers/permission_controller.dart';
 
-/// A screen to be shown as a modal bottom sheet for editing an existing permission request.
 class EditPermissionSheetScreen extends StatefulWidget {
   final Map<String, dynamic> permissionRequest;
 
@@ -24,18 +23,18 @@ class EditPermissionSheetScreen extends StatefulWidget {
 }
 
 class _EditPermissionSheetScreenState extends State<EditPermissionSheetScreen> {
-  // --- UI Constants ---
-  static const Color _primaryBlue = Color(0xFF1469C7);
-  static const Color _lightBackground = Color(0xFFF7F9FC);
-  static const Color _cardBackground = Colors.white;
-  static const Color _darkText = Color(0xFF2C3E50);
-  static const Color _mediumText = Color(0xFF7F8C8D);
-  static const Color _borderGrey = Color(0xFFE0E6ED);
-  static const Color _declineRed = Color(0xFFE74C3C);
-  static const Color _lightBlueAccent = Color(0xFF5B9BD5);
+  // --- UI Constants - Use AppColors for consistency ---
+  static const Color _primaryBlue = AppColors.primaryBlue;
+  static const Color _lightBackground = AppColors.lightBackground;
+  static const Color _cardBackground = AppColors.cardBackground;
+  static const Color _darkText = AppColors.darkText;
+  static const Color _mediumText = AppColors.mediumText;
+  static const Color _borderGrey = AppColors.borderGrey;
+  static const Color _declineRed = AppColors.declineRed;
+  static const Color _lightBlueAccent = AppColors.primaryBlue;
 
-  // --- Font Family Constant ---
-  static const String _fontFamily =AppFonts.fontFamily;
+  // --- Font Family Constant - Use AppFonts for consistency ---
+  static const String _fontFamily = AppFonts.fontFamily;
 
   final TextEditingController _dateController = TextEditingController();
   final TextEditingController _reasonController = TextEditingController();
@@ -47,12 +46,14 @@ class _EditPermissionSheetScreenState extends State<EditPermissionSheetScreen> {
   static const String _apiUrl =
       'http://188.166.242.109:5000/api/staffpermissions';
   late final AuthController _authController;
+  late final PermissionController
+      _permissionController; // Get PermissionController
 
   @override
   void initState() {
     super.initState();
     _authController = Get.find<AuthController>();
-    // Use addPostFrameCallback to ensure the UI has been built before initializing controllers.
+    _permissionController = Get.find<PermissionController>();
     SchedulerBinding.instance.addPostFrameCallback((_) {
       _initializeFormFields();
       _dateController.addListener(_validateFields);
@@ -61,13 +62,13 @@ class _EditPermissionSheetScreenState extends State<EditPermissionSheetScreen> {
     });
   }
 
-  /// Helper function to determine the font based on the text content.
-  /// (Using a static fallback for `NotoSerifKhmer` since we're applying it broadly)
-  String _getFontFamily(String text) {
-    // If you intend for specific segments to fallback to 'Inter' for Latin text,
-    // you could keep the regex logic and adjust it.
-    // For now, assuming NotoSerifKhmer for all requested text.
-    return _fontFamily;
+  @override
+  void dispose() {
+    _dateController.removeListener(_validateFields);
+    _reasonController.removeListener(_validateFields);
+    _dateController.dispose();
+    _reasonController.dispose();
+    super.dispose();
   }
 
   /// Pre-fills the form with data from the permission request passed in the constructor.
@@ -87,13 +88,12 @@ class _EditPermissionSheetScreenState extends State<EditPermissionSheetScreen> {
           if (dateStrings.length > 1) {
             endDate = DateTime.tryParse(dateStrings[1]);
           } else {
-            endDate = startDate; // If only one date, it's a single day
+            endDate = startDate;
           }
         }
 
         if (startDate != null && endDate != null) {
           _selectedDateRange = DateTimeRange(start: startDate, end: endDate);
-          // Format for display consistency with MyPermissionScreen
           if (startDate.isAtSameMomentAs(endDate)) {
             _dateController.text =
                 DateFormat('EEEE, dd/MM/yyyy').format(startDate);
@@ -102,7 +102,6 @@ class _EditPermissionSheetScreenState extends State<EditPermissionSheetScreen> {
                 '${DateFormat('dd/MM/yyyy').format(startDate)} - ${DateFormat('dd/MM/yyyy').format(endDate)}';
           }
         } else {
-          // Fallback if parsing fails or dates are null
           debugPrint(
               "Warning: Could not parse dates from hold_date: $holdDateRaw");
           _selectedDateRange =
@@ -111,7 +110,6 @@ class _EditPermissionSheetScreenState extends State<EditPermissionSheetScreen> {
               DateFormat('EEEE, dd/MM/yyyy').format(DateTime.now());
         }
       } catch (e) {
-        // Handle any parsing errors gracefully and set a default date.
         debugPrint("Error parsing hold_date in EditPermissionSheetScreen: $e");
         _selectedDateRange =
             DateTimeRange(start: DateTime.now(), end: DateTime.now());
@@ -119,22 +117,12 @@ class _EditPermissionSheetScreenState extends State<EditPermissionSheetScreen> {
             DateFormat('EEEE, dd/MM/yyyy').format(DateTime.now());
       }
     } else {
-      // Fallback if hold_date is null or not a list
       debugPrint("Warning: hold_date is missing or malformed: $holdDateRaw");
       _selectedDateRange =
           DateTimeRange(start: DateTime.now(), end: DateTime.now());
       _dateController.text =
           DateFormat('EEEE, dd/MM/yyyy').format(DateTime.now());
     }
-  }
-
-  @override
-  void dispose() {
-    _dateController.removeListener(_validateFields);
-    _reasonController.removeListener(_validateFields);
-    _dateController.dispose();
-    _reasonController.dispose();
-    super.dispose();
   }
 
   /// Validates the form fields to enable/disable the "Update" button.
@@ -148,7 +136,6 @@ class _EditPermissionSheetScreenState extends State<EditPermissionSheetScreen> {
   /// Opens the date range picker and updates the text field with the selected date(s).
   Future<void> _showDateRangePicker() async {
     final DateTime now = DateTime.now();
-    // Use the currently selected date as the first selectable date to allow editing past dates.
     final DateTime firstSelectableDate = _selectedDateRange?.start != null &&
             _selectedDateRange!.start.isBefore(now)
         ? _selectedDateRange!.start
@@ -172,11 +159,9 @@ class _EditPermissionSheetScreenState extends State<EditPermissionSheetScreen> {
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
                 foregroundColor: _primaryBlue,
-                textStyle: const TextStyle(
-                    fontFamily: _fontFamily), // Apply NotoSerifKhmer
+                textStyle: const TextStyle(fontFamily: _fontFamily),
               ),
             ),
-            // Apply theme-wide font for date picker
             textTheme:
                 Theme.of(context).textTheme.apply(fontFamily: _fontFamily),
           ),
@@ -189,11 +174,9 @@ class _EditPermissionSheetScreenState extends State<EditPermissionSheetScreen> {
       setState(() {
         _selectedDateRange = picked;
         if (picked.start.isAtSameMomentAs(picked.end)) {
-          // Format for single day
           _dateController.text =
               DateFormat('EEEE, dd/MM/yyyy').format(picked.start);
         } else {
-          // Format for date range
           _dateController.text =
               '${DateFormat('dd/MM/yyyy').format(picked.start)} - ${DateFormat('dd/MM/yyyy').format(picked.end)}';
         }
@@ -204,39 +187,32 @@ class _EditPermissionSheetScreenState extends State<EditPermissionSheetScreen> {
 
   /// Submits the edited permission request to the API.
   Future<void> _submitEditRequest() async {
-    // Show a confirmation dialog before updating.
     final bool? confirmUpdate = await Get.dialog<bool>(
       AlertDialog(
         backgroundColor: _cardBackground,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text('Confirm Update',
             style: TextStyle(
-                fontFamily:
-                    _getFontFamily('Confirm Update'), // Apply NotoSerifKhmer
-                fontWeight: FontWeight.w700)),
+                fontFamily: _fontFamily, fontWeight: FontWeight.w700)),
         content: Text(
             'Are you sure you want to update this permission request?',
-            style: TextStyle(
-                fontFamily: _getFontFamily(
-                    'Are you sure you want to update this permission request?'), // Apply NotoSerifKhmer
-                color: _mediumText)),
+            style: TextStyle(fontFamily: _fontFamily, color: _mediumText)),
         actions: <Widget>[
           TextButton(
-            onPressed: () =>
-                Get.back(result: false), // Dismiss and return false
+            onPressed: () => Get.back(result: false),
             style: TextButton.styleFrom(
               foregroundColor: _declineRed,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8)),
             ),
             child: Text('Cancel',
-                style: TextStyle(
-                    color: _darkText,
-                    fontFamily:
-                        _getFontFamily('Cancel'))), // Apply NotoSerifKhmer
+                style: TextStyle(color: _darkText, fontFamily: _fontFamily)),
           ),
           ElevatedButton(
-            onPressed: () => Get.back(result: true), // Dismiss and return true
+            onPressed: () {
+              Get.back(result: true);
+              Get.offAndToNamed('/my-permission');
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: _primaryBlue,
               foregroundColor: Colors.white,
@@ -245,9 +221,7 @@ class _EditPermissionSheetScreenState extends State<EditPermissionSheetScreen> {
             ),
             child: Text('Update',
                 style: TextStyle(
-                    fontFamily:
-                        _getFontFamily('Update'), // Apply NotoSerifKhmer
-                    fontWeight: FontWeight.w600)),
+                    fontFamily: _fontFamily, fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -255,7 +229,7 @@ class _EditPermissionSheetScreenState extends State<EditPermissionSheetScreen> {
     );
 
     if (confirmUpdate != true) {
-      return; // If the user cancels, do nothing.
+      return;
     }
 
     setState(() {
@@ -272,7 +246,6 @@ class _EditPermissionSheetScreenState extends State<EditPermissionSheetScreen> {
         throw Exception("Permission ID is missing. Cannot update.");
       }
 
-      // Format dates to "YYYY-MM-DD" for the API payload
       final String startDateISO =
           DateFormat('yyyy-MM-dd').format(_selectedDateRange!.start);
       final String endDateISO =
@@ -280,12 +253,9 @@ class _EditPermissionSheetScreenState extends State<EditPermissionSheetScreen> {
 
       final List<String> holdDatePayload;
       if (_selectedDateRange!.start.isAtSameMomentAs(_selectedDateRange!.end)) {
-        holdDatePayload = [startDateISO]; // Single date as a direct string
+        holdDatePayload = [startDateISO];
       } else {
-        holdDatePayload = [
-          startDateISO,
-          endDateISO
-        ]; // Date range as direct strings
+        holdDatePayload = [startDateISO, endDateISO];
       }
 
       final Map<String, dynamic> payload = {
@@ -307,19 +277,18 @@ class _EditPermissionSheetScreenState extends State<EditPermissionSheetScreen> {
           'Success',
           'Permission request updated!',
           snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green,
+          backgroundColor: AppColors.successGreen,
           colorText: Colors.white,
           messageText: Text('Permission request updated!',
-              style: TextStyle(
-                  fontFamily: _getFontFamily('Permission request updated!'),
-                  color: Colors.white)),
+              style: TextStyle(fontFamily: _fontFamily, color: Colors.white)),
           titleText: Text('Success',
               style: TextStyle(
-                  fontFamily: _getFontFamily('Success'),
+                  fontFamily: _fontFamily,
                   fontWeight: FontWeight.w700,
                   color: Colors.white)),
         );
-        Get.back(result: true); // Navigate back with a success result.
+        _permissionController.fetchPermissions(); // Trigger data refresh
+        Get.back(result: true); // Close the sheet
       } else {
         String errorMessage =
             'Failed to update request: ${response.statusCode}';
@@ -341,12 +310,10 @@ class _EditPermissionSheetScreenState extends State<EditPermissionSheetScreen> {
           colorText: Colors.white,
           duration: const Duration(seconds: 5),
           messageText: Text(errorMessage,
-              style: TextStyle(
-                  fontFamily: _getFontFamily(errorMessage),
-                  color: Colors.white)),
+              style: TextStyle(fontFamily: _fontFamily, color: Colors.white)),
           titleText: Text('Error',
               style: TextStyle(
-                  fontFamily: _getFontFamily('Error'),
+                  fontFamily: _fontFamily,
                   fontWeight: FontWeight.w700,
                   color: Colors.white)),
         );
@@ -362,11 +329,10 @@ class _EditPermissionSheetScreenState extends State<EditPermissionSheetScreen> {
         backgroundColor: _declineRed,
         colorText: Colors.white,
         messageText: Text(errorMessage,
-            style: TextStyle(
-                fontFamily: _getFontFamily(errorMessage), color: Colors.white)),
+            style: TextStyle(fontFamily: _fontFamily, color: Colors.white)),
         titleText: Text('Error',
             style: TextStyle(
-                fontFamily: _getFontFamily('Error'),
+                fontFamily: _fontFamily,
                 fontWeight: FontWeight.w700,
                 color: Colors.white)),
       );
@@ -387,31 +353,26 @@ class _EditPermissionSheetScreenState extends State<EditPermissionSheetScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text('Confirm Deletion',
             style: TextStyle(
-                fontFamily:
-                    _getFontFamily('Confirm Deletion'), // Apply NotoSerifKhmer
-                fontWeight: FontWeight.w700)),
+                fontFamily: _fontFamily, fontWeight: FontWeight.w700)),
         content: Text(
             'Are you sure you want to delete this permission request? This action cannot be undone.',
-            style: TextStyle(
-                fontFamily: _getFontFamily(
-                    'Are you sure you want to delete this permission request? This action cannot be undone.'), // Apply NotoSerifKhmer
-                color: _mediumText)),
+            style: TextStyle(fontFamily: _fontFamily, color: _mediumText)),
         actions: <Widget>[
           TextButton(
             onPressed: () => Get.back(result: false),
             style: TextButton.styleFrom(
-              foregroundColor: _darkText, // Use dark text for cancel button
+              foregroundColor: _darkText,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8)),
             ),
             child: Text('Cancel',
-                style: TextStyle(
-                    color: _darkText,
-                    fontFamily:
-                        _getFontFamily('Cancel'))), // Apply NotoSerifKhmer
+                style: TextStyle(color: _darkText, fontFamily: _fontFamily)),
           ),
           ElevatedButton(
-            onPressed: () => Get.back(result: true),
+            onPressed: () {
+              Get.back(result: true);
+              Get.offAndToNamed('/my-permission');
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: _declineRed,
               foregroundColor: Colors.white,
@@ -420,9 +381,7 @@ class _EditPermissionSheetScreenState extends State<EditPermissionSheetScreen> {
             ),
             child: Text('Delete',
                 style: TextStyle(
-                    fontFamily:
-                        _getFontFamily('Delete'), // Apply NotoSerifKhmer
-                    fontWeight: FontWeight.w600)),
+                    fontFamily: _fontFamily, fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -452,19 +411,18 @@ class _EditPermissionSheetScreenState extends State<EditPermissionSheetScreen> {
             'Success',
             'Permission request deleted!',
             snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.green,
+            backgroundColor: AppColors.successGreen,
             colorText: Colors.white,
             messageText: Text('Permission request deleted!',
-                style: TextStyle(
-                    fontFamily: _getFontFamily('Permission request deleted!'),
-                    color: Colors.white)),
+                style: TextStyle(fontFamily: _fontFamily, color: Colors.white)),
             titleText: Text('Success',
                 style: TextStyle(
-                    fontFamily: _getFontFamily('Success'),
+                    fontFamily: _fontFamily,
                     fontWeight: FontWeight.w700,
                     color: Colors.white)),
           );
-          Get.back(result: true); // Navigate back with a success result.
+          _permissionController.fetchPermissions(); // Trigger data refresh
+          Get.back(result: true); // Close the sheet
         } else {
           String errorMessage =
               'Failed to delete request. Status Code: ${response.statusCode}';
@@ -484,12 +442,10 @@ class _EditPermissionSheetScreenState extends State<EditPermissionSheetScreen> {
             backgroundColor: _declineRed,
             colorText: Colors.white,
             messageText: Text(errorMessage,
-                style: TextStyle(
-                    fontFamily: _getFontFamily(errorMessage),
-                    color: Colors.white)),
+                style: TextStyle(fontFamily: _fontFamily, color: Colors.white)),
             titleText: Text('Error',
                 style: TextStyle(
-                    fontFamily: _getFontFamily('Error'),
+                    fontFamily: _fontFamily,
                     fontWeight: FontWeight.w700,
                     color: Colors.white)),
           );
@@ -505,12 +461,10 @@ class _EditPermissionSheetScreenState extends State<EditPermissionSheetScreen> {
           backgroundColor: _declineRed,
           colorText: Colors.white,
           messageText: Text(errorMessage,
-              style: TextStyle(
-                  fontFamily: _getFontFamily(errorMessage),
-                  color: Colors.white)),
+              style: TextStyle(fontFamily: _fontFamily, color: Colors.white)),
           titleText: Text('Error',
               style: TextStyle(
-                  fontFamily: _getFontFamily('Error'),
+                  fontFamily: _fontFamily,
                   fontWeight: FontWeight.w700,
                   color: Colors.white)),
         );
@@ -527,25 +481,22 @@ class _EditPermissionSheetScreenState extends State<EditPermissionSheetScreen> {
   @override
   Widget build(BuildContext context) {
     return AbsorbPointer(
-      absorbing: _isLoading, // Prevent interaction while loading
+      absorbing: _isLoading,
       child: Container(
         decoration: const BoxDecoration(
           color: _lightBackground,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: SingleChildScrollView(
-          physics:
-              const ClampingScrollPhysics(), // Use ClampingScrollPhysics for a better feel
+          physics: const ClampingScrollPhysics(),
           padding: EdgeInsets.only(
             left: 24,
             right: 24,
             top: 24,
-            // Dynamic padding to move content above the keyboard
             bottom: 24 + MediaQuery.of(context).viewInsets.bottom,
           ),
           child: Theme(
             data: Theme.of(context).copyWith(
-              // Apply default font family to the entire theme subtree within this screen
               textTheme:
                   Theme.of(context).textTheme.apply(fontFamily: _fontFamily),
               textSelectionTheme: const TextSelectionThemeData(
@@ -558,7 +509,6 @@ class _EditPermissionSheetScreenState extends State<EditPermissionSheetScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header with title and close button
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -568,30 +518,27 @@ class _EditPermissionSheetScreenState extends State<EditPermissionSheetScreen> {
                         fontSize: 22,
                         fontWeight: FontWeight.w800,
                         color: _darkText,
-                        fontFamily: _getFontFamily(
-                            'Edit Permission'), // Applied font family
+                        fontFamily: _fontFamily,
                       ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.close_rounded,
                           color: _mediumText, size: 28),
                       onPressed: () => Get.back(),
-                      splashRadius: 24, // Add a subtle splash effect
+                      splashRadius: 24,
                     ),
                   ],
                 ),
-                const SizedBox(height: 32), // Consistent vertical spacing
-                // Date input field
+                const SizedBox(height: 32),
                 _buildInputFieldWithLabel(
                   label: "Choose Date",
                   controller: _dateController,
                   hintText: 'Select a date or date range',
-                  icon: Icons.calendar_today_rounded, // Changed icon
+                  icon: Icons.calendar_today_rounded,
                   onTap: _showDateRangePicker,
                   readOnly: true,
                 ),
-                const SizedBox(height: 24), // Consistent vertical spacing
-                // Reason text area
+                const SizedBox(height: 24),
                 _buildInputFieldWithLabel(
                   label: "Reason",
                   controller: _reasonController,
@@ -599,8 +546,7 @@ class _EditPermissionSheetScreenState extends State<EditPermissionSheetScreen> {
                   icon: Icons.edit_note_rounded,
                   maxLines: 5,
                 ),
-                const SizedBox(height: 40), // Spacing before buttons
-                // Action buttons: Delete and Update
+                const SizedBox(height: 40),
                 Row(
                   children: [
                     Expanded(
@@ -617,29 +563,27 @@ class _EditPermissionSheetScreenState extends State<EditPermissionSheetScreen> {
                           disabledBackgroundColor: _borderGrey,
                           disabledForegroundColor: _mediumText,
                         ),
-                        child:
-                            _isLoading // Show loading indicator within button
-                                ? const SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.5,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                          Colors.white),
-                                    ),
-                                  )
-                                : Text(
-                                    "Delete",
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      fontFamily: _getFontFamily(
-                                          'Delete'), // Applied font family
-                                    ),
-                                  ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white),
+                                ),
+                              )
+                            : Text(
+                                "Delete",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  fontFamily: _fontFamily,
+                                ),
+                              ),
                       ),
                     ),
-                    const SizedBox(width: 16), // Spacing between buttons
+                    const SizedBox(width: 16),
                     Expanded(
                       child: ElevatedButton(
                         onPressed: (_isApplyButtonEnabled && !_isLoading)
@@ -656,26 +600,24 @@ class _EditPermissionSheetScreenState extends State<EditPermissionSheetScreen> {
                           disabledBackgroundColor: _borderGrey,
                           disabledForegroundColor: _mediumText,
                         ),
-                        child:
-                            _isLoading // Show loading indicator within button
-                                ? const SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.5,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                          Colors.white),
-                                    ),
-                                  )
-                                : Text(
-                                    "Update",
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      fontFamily: _getFontFamily(
-                                          'Update'), // Applied font family
-                                    ),
-                                  ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white),
+                                ),
+                              )
+                            : Text(
+                                "Update",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  fontFamily: _fontFamily,
+                                ),
+                              ),
                       ),
                     ),
                   ],
@@ -701,17 +643,15 @@ class _EditPermissionSheetScreenState extends State<EditPermissionSheetScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Label with asterisk for required fields
         Text.rich(
           TextSpan(
             children: [
               TextSpan(
                   text: label,
                   style: TextStyle(
-                    color: _darkText,
-                    fontWeight: FontWeight.w700,
-                    fontFamily: _getFontFamily(label), // Applied font family
-                  )),
+                      color: _darkText,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: _fontFamily)),
               const TextSpan(text: " *", style: TextStyle(color: _declineRed)),
             ],
           ),
@@ -719,11 +659,10 @@ class _EditPermissionSheetScreenState extends State<EditPermissionSheetScreen> {
             fontSize: 15,
             fontWeight: FontWeight.w600,
             color: _darkText,
-            fontFamily: _getFontFamily(label), // Applied font family
+            fontFamily: _fontFamily,
           ),
         ),
         const SizedBox(height: 12),
-        // Text field
         TextFormField(
           controller: controller,
           readOnly: readOnly,
@@ -741,10 +680,7 @@ class _EditPermissionSheetScreenState extends State<EditPermissionSheetScreen> {
                     size: 18, color: _mediumText)
                 : null,
             hintText: hintText,
-            hintStyle: TextStyle(
-                color: _mediumText,
-                fontFamily:
-                    _getFontFamily(hintText ?? '')), // Applied font family
+            hintStyle: TextStyle(color: _mediumText, fontFamily: _fontFamily),
             filled: true,
             fillColor: _cardBackground,
             contentPadding:
@@ -762,10 +698,7 @@ class _EditPermissionSheetScreenState extends State<EditPermissionSheetScreen> {
               borderSide: const BorderSide(color: _primaryBlue, width: 2),
             ),
           ),
-          style: TextStyle(
-              color: _darkText,
-              fontFamily:
-                  _getFontFamily(controller.text)), // Applied font family
+          style: TextStyle(color: _darkText, fontFamily: _fontFamily),
         ),
       ],
     );

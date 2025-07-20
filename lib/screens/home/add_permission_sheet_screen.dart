@@ -4,11 +4,10 @@ import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-// Assuming you have this file and controller.
 import 'package:school_management_system_teacher_app/controllers/auth_controller.dart';
 import 'package:school_management_system_teacher_app/utils/app_colors.dart';
+import 'package:school_management_system_teacher_app/controllers/permission_controller.dart';
 
-/// A screen to be shown as a modal bottom sheet for adding a new permission request.
 class AddPermissionSheetScreen extends StatefulWidget {
   const AddPermissionSheetScreen({Key? key}) : super(key: key);
 
@@ -18,17 +17,17 @@ class AddPermissionSheetScreen extends StatefulWidget {
 }
 
 class _AddPermissionSheetScreenState extends State<AddPermissionSheetScreen> {
-  // --- UI Constants ---
-  static const Color _primaryBlue = Color(0xFF1469C7);
-  static const Color _lightBackground = Color(0xFFF7F9FC);
-  static const Color _cardBackground = Colors.white;
-  static const Color _darkText = Color(0xFF2C3E50);
-  static const Color _mediumText = Color(0xFF7F8C8D);
-  static const Color _borderGrey = Color(0xFFE0E6ED);
-  static const Color _declineRed = Color(0xFFE74C3C);
-  static const Color _lightBlueAccent = Color(0xFF5B9BD5);
+  // --- UI Constants - Use AppColors for consistency ---
+  static const Color _primaryBlue = AppColors.primaryBlue;
+  static const Color _lightBackground = AppColors.lightBackground;
+  static const Color _cardBackground = AppColors.cardBackground;
+  static const Color _darkText = AppColors.darkText;
+  static const Color _mediumText = AppColors.mediumText;
+  static const Color _borderGrey = AppColors.borderGrey;
+  static const Color _declineRed = AppColors.declineRed;
+  static const Color _lightBlueAccent = AppColors.primaryBlue;
 
-  // --- Font Family Constant ---
+  // --- Font Family Constant - Use AppFonts for consistency ---
   static const String _fontFamily = AppFonts.fontFamily;
 
   final TextEditingController _dateController = TextEditingController();
@@ -41,14 +40,16 @@ class _AddPermissionSheetScreenState extends State<AddPermissionSheetScreen> {
   static const String _apiUrl =
       'http://188.166.242.109:5000/api/staffpermissions';
   late final AuthController _authController;
+  late final PermissionController _permissionController;
 
   @override
   void initState() {
     super.initState();
     _authController = Get.find<AuthController>();
+    _permissionController = Get.find<PermissionController>();
     _dateController.addListener(_validateFields);
     _reasonController.addListener(_validateFields);
-    _validateFields(); // Initial validation
+    _validateFields();
   }
 
   @override
@@ -85,11 +86,9 @@ class _AddPermissionSheetScreenState extends State<AddPermissionSheetScreen> {
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
                 foregroundColor: _primaryBlue,
-                // Apply font family to TextButtons in date picker
                 textStyle: const TextStyle(fontFamily: _fontFamily),
               ),
             ),
-            // Also apply to overall text theme for date picker components
             textTheme:
                 Theme.of(context).textTheme.apply(fontFamily: _fontFamily),
           ),
@@ -112,7 +111,7 @@ class _AddPermissionSheetScreenState extends State<AddPermissionSheetScreen> {
           _dateController.text = '$startDate - $endDate';
         }
       });
-      _validateFields(); // Re-validate fields after date selection
+      _validateFields();
     }
   }
 
@@ -167,9 +166,8 @@ class _AddPermissionSheetScreenState extends State<AddPermissionSheetScreen> {
           'Success',
           'Permission request submitted!',
           snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green,
+          backgroundColor: AppColors.successGreen,
           colorText: Colors.white,
-          // Apply font family to snackbar text
           messageText: Text('Permission request submitted!',
               style: const TextStyle(
                   color: Colors.white, fontFamily: _fontFamily)),
@@ -177,7 +175,9 @@ class _AddPermissionSheetScreenState extends State<AddPermissionSheetScreen> {
               style: const TextStyle(
                   color: Colors.white, fontFamily: _fontFamily)),
         );
+        _permissionController.fetchPermissions(); // Trigger data refresh
         Get.back(result: true);
+        Get.offAndToNamed('/my-permission'); // Close the sheet
       } else {
         String errorMessage =
             'Failed to submit request: ${response.statusCode}';
@@ -196,7 +196,6 @@ class _AddPermissionSheetScreenState extends State<AddPermissionSheetScreen> {
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: _declineRed,
           colorText: Colors.white,
-          // Apply font family to snackbar text
           messageText: Text(errorMessage,
               style: const TextStyle(
                   color: Colors.white, fontFamily: _fontFamily)),
@@ -213,7 +212,6 @@ class _AddPermissionSheetScreenState extends State<AddPermissionSheetScreen> {
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: _declineRed,
         colorText: Colors.white,
-        // Apply font family to snackbar text
         messageText: Text(
             'An error occurred. Please check your internet connection.',
             style:
@@ -240,7 +238,7 @@ class _AddPermissionSheetScreenState extends State<AddPermissionSheetScreen> {
             color: _darkText,
             fontWeight: FontWeight.w700,
             fontSize: 18,
-            fontFamily: _fontFamily, // Apply font family
+            fontFamily: _fontFamily,
           ),
         ),
         content: Column(
@@ -252,7 +250,7 @@ class _AddPermissionSheetScreenState extends State<AddPermissionSheetScreen> {
               style: TextStyle(
                 color: _mediumText,
                 fontSize: 15,
-                fontFamily: _fontFamily, // Apply font family
+                fontFamily: _fontFamily,
               ),
             ),
             const SizedBox(height: 16),
@@ -264,13 +262,12 @@ class _AddPermissionSheetScreenState extends State<AddPermissionSheetScreen> {
                     style: TextStyle(
                         fontWeight: FontWeight.w600,
                         color: _darkText,
-                        fontFamily: _fontFamily), // Apply font family
+                        fontFamily: _fontFamily),
                   ),
                   TextSpan(
                     text: _dateController.text,
-                    style: TextStyle(
-                        color: _mediumText,
-                        fontFamily: _fontFamily), // Apply font family
+                    style:
+                        TextStyle(color: _mediumText, fontFamily: _fontFamily),
                   ),
                 ],
               ),
@@ -284,13 +281,12 @@ class _AddPermissionSheetScreenState extends State<AddPermissionSheetScreen> {
                     style: TextStyle(
                         fontWeight: FontWeight.w600,
                         color: _darkText,
-                        fontFamily: _fontFamily), // Apply font family
+                        fontFamily: _fontFamily),
                   ),
                   TextSpan(
                     text: _reasonController.text,
-                    style: TextStyle(
-                        color: _mediumText,
-                        fontFamily: _fontFamily), // Apply font family
+                    style:
+                        TextStyle(color: _mediumText, fontFamily: _fontFamily),
                   ),
                 ],
               ),
@@ -308,8 +304,7 @@ class _AddPermissionSheetScreenState extends State<AddPermissionSheetScreen> {
             child: const Text(
               "Cancel",
               style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontFamily: _fontFamily), // Apply font family
+                  fontWeight: FontWeight.w600, fontFamily: _fontFamily),
             ),
           ),
           ElevatedButton(
@@ -323,8 +318,7 @@ class _AddPermissionSheetScreenState extends State<AddPermissionSheetScreen> {
             child: const Text(
               "Confirm",
               style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontFamily: _fontFamily), // Apply font family
+                  fontWeight: FontWeight.w600, fontFamily: _fontFamily),
             ),
           ),
         ],
@@ -341,14 +335,10 @@ class _AddPermissionSheetScreenState extends State<AddPermissionSheetScreen> {
         color: _lightBackground,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      // Wrap the content in a SingleChildScrollView to prevent overflow
       child: SingleChildScrollView(
-        // <--- ADD THIS
         child: Padding(
-          // <--- ADD THIS to apply padding inside the scroll view
           padding: EdgeInsets.only(
-            bottom:
-                MediaQuery.of(context).viewInsets.bottom, // Adjust for keyboard
+            bottom: MediaQuery.of(context).viewInsets.bottom,
           ),
           child: Theme(
             data: Theme.of(context).copyWith(
@@ -361,8 +351,7 @@ class _AddPermissionSheetScreenState extends State<AddPermissionSheetScreen> {
                   Theme.of(context).textTheme.apply(fontFamily: _fontFamily),
             ),
             child: Column(
-              mainAxisSize: MainAxisSize
-                  .min, // Keep min to let SingleChildScrollView determine height
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
@@ -438,7 +427,7 @@ class _AddPermissionSheetScreenState extends State<AddPermissionSheetScreen> {
             ),
           ),
         ),
-      ), // <--- END OF SingleChildScrollView
+      ),
     );
   }
 

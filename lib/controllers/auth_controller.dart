@@ -7,6 +7,25 @@ class AuthController extends GetxController {
   // Instance of FlutterSecureStorage for secure data storage (like tokens)
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
+  // Reactive user fields
+  final RxString userName = ''.obs;
+  final RxString userEmail = ''.obs;
+  final RxString userImageUrl =
+      ''.obs; // If you don't have user image, leave as empty string
+
+  @override
+  void onInit() {
+    super.onInit();
+    _loadUserData();
+  }
+
+  void _loadUserData() async {
+    userName.value = (await getUserName()) ?? '';
+    userEmail.value = await getUserEmail();
+    // If you have a method for user image, load it here. Otherwise, leave as empty string.
+    // userImageUrl.value = await getUserImageUrl();
+  }
+
   /// Saves the authentication token securely using FlutterSecureStorage.
   /// This token is typically received after a successful login.
   Future<void> saveToken(String token) async {

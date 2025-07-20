@@ -14,6 +14,9 @@ import 'package:school_management_system_teacher_app/controllers/auth_controller
 import 'package:school_management_system_teacher_app/routes/app_routes.dart';
 import 'package:school_management_system_teacher_app/screens/classes/draggable_message_button.dart';
 
+// Import your CustomDrawer widget
+import 'package:school_management_system_teacher_app/screens/home/custom_drawer.dart'; // Make sure this path is correct!
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -23,11 +26,17 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
+  // AuthController is still needed here to fetch user data and perform logout
   final AuthController authController = Get.find<AuthController>();
 
+  // --- GlobalKey for ScaffoldState ---
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   // --- State Variables ---
-  String? imageUrl;
-  String? fullName;
+  String? imageUrl; // For header profile picture
+  String? fullName; // For header full name
+  String? userEmail; // For drawer email (fetched from AuthController)
+
   bool isLoading = true; // Controls the main profile/content loader
   bool isExpanded = false; // Controls the "My Schedule" card expansion
   late AnimationController _arrowController;
@@ -48,7 +57,8 @@ class _HomeScreenState extends State<HomeScreen>
   static const Color _skeletonHighlightColor = Color(0xFFF5F5F5);
 
   // --- Font Family Constant ---
-  static const String _fontFamily = AppFonts.fontFamily;
+  static const String _fontFamily =
+      AppFonts.fontFamily; // Assuming AppFonts.fontFamily maps to this
 
   @override
   void initState() {
@@ -81,10 +91,24 @@ class _HomeScreenState extends State<HomeScreen>
 
   Future<void> fetchUserProfile() async {
     try {
+      // Get user email and staff ID from AuthController
       _currentUserEmail = await authController.getUserEmail();
-      _currentStaffId = await authController.getStaffId(); // Fetch staff ID
+      _currentStaffId = await authController.getStaffId();
 
-      if (_currentUserEmail!.isEmpty || _currentStaffId!.isEmpty) {
+      // Retrieve display name, email, and image URL directly from AuthController's
+      // observable properties. These properties are expected to be updated by
+      // your AuthController's login/data fetching logic.
+      setState(() {
+        // Use setState here to ensure UI updates with current AuthController values
+        fullName = authController.userName.value;
+        userEmail = authController.userEmail.value;
+        imageUrl = authController.userImageUrl.value;
+      });
+
+      if (_currentUserEmail == null ||
+          _currentUserEmail!.isEmpty ||
+          _currentStaffId == null ||
+          _currentStaffId!.isEmpty) {
         print("User email or Staff ID is empty, cannot fetch profile.");
         if (mounted) {
           setState(() {
@@ -95,8 +119,15 @@ class _HomeScreenState extends State<HomeScreen>
         return;
       }
 
-      final response = await http.get(Uri.parse(
-          'http://188.166.242.109:5000/api/staffs'));
+      // You can still perform an API call here if you need to fetch additional
+      // or more up-to-date user details specifically for the HomeScreen,
+      // but ensure it doesn't conflict with AuthController's primary role.
+      // For this scenario, we'll assume AuthController is the source of truth
+      // for the basic profile info (name, email, image URL) that goes to the drawer.
+
+      // Example of an API call if needed (otherwise, remove this block):
+      final response =
+          await http.get(Uri.parse('http://188.166.242.109:5000/api/staffs'));
 
       if (!mounted) return;
 
@@ -109,24 +140,35 @@ class _HomeScreenState extends State<HomeScreen>
         );
 
         if (user != null) {
-          setState(() {
-            imageUrl = user['image'] as String? ?? '';
-            fullName = user['en_name'] as String? ?? '';
-            isLoading = false; // Set to false after successful data load
-          });
+          if (mounted) {
+            setState(() {
+              // Update state variables with potentially more recent data from this API call
+              // or ensure AuthController's values are synchronized with this.
+              imageUrl = user['image'] as String? ??
+                  imageUrl; // Prefer API data, fallback to existing
+              fullName = user['en_name'] as String? ??
+                  fullName; // Prefer API data, fallback to existing
+              // userEmail = user['email'] as String? ?? userEmail; // If you want to update email from this API call too
+              isLoading = false; // Set to false after successful data load
+            });
+          }
         } else {
           print("User not found with email: $_currentUserEmail");
-          setState(() {
-            isLoading = false; // Set to false if user not found
-            _isLoadingClasses = false;
-          });
+          if (mounted) {
+            setState(() {
+              isLoading = false; // Set to false if user not found
+              _isLoadingClasses = false;
+            });
+          }
         }
       } else {
         print('Failed to load staff data: ${response.statusCode}');
-        setState(() {
-          isLoading = false; // Set to false on API error
-          _isLoadingClasses = false;
-        });
+        if (mounted) {
+          setState(() {
+            isLoading = false; // Set to false on API error
+            _isLoadingClasses = false;
+          });
+        }
       }
     } catch (e) {
       print('Error fetching profile: $e');
@@ -142,8 +184,8 @@ class _HomeScreenState extends State<HomeScreen>
   // New method to fetch subjects
   Future<void> _fetchSubjects() async {
     try {
-      final response = await http.get(Uri.parse(
-          'http://188.166.242.109:5000/api/subjects'));
+      final response =
+          await http.get(Uri.parse('http://188.166.242.109:5000/api/subjects'));
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
         final List<dynamic> subjectsApi = jsonData['data'];
@@ -172,8 +214,8 @@ class _HomeScreenState extends State<HomeScreen>
     if (mounted) setState(() => _isLoadingClasses = true);
 
     try {
-      final response = await http.get(Uri.parse(
-          'http://188.166.242.109:5000/api/classes'));
+      final response =
+          await http.get(Uri.parse('http://188.166.242.109:5000/api/classes'));
 
       if (!mounted) return;
 
@@ -235,6 +277,17 @@ class _HomeScreenState extends State<HomeScreen>
 
     return Scaffold(
       backgroundColor: _primaryBlue,
+      key: _scaffoldKey, // Assign the GlobalKey here
+      // Pass data to CustomDrawer using the HomeScreen's State variables
+      drawer: CustomDrawer(
+        userDisplayName: fullName ?? 'Guest', // Pass fetched full name
+        // userDisplayEmail: , // Pass fetched email
+        userDisplayImageUrl: imageUrl ?? '', // Pass fetched image URL
+        onLogout: () {
+          // This callback will trigger the logout action in AuthController
+          authController.logout();
+        },
+      ),
       body: Stack(
         children: [
           Column(
@@ -296,9 +349,12 @@ class _HomeScreenState extends State<HomeScreen>
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+            // Modified IconButton to open the drawer
             IconButton(
               icon: const Icon(Icons.menu, color: Colors.white, size: 28),
-              onPressed: () => print('Menu tapped'),
+              onPressed: () {
+                _scaffoldKey.currentState?.openDrawer(); // Open the drawer
+              },
             ),
             SvgPicture.asset(
               'assets/images/logo/leading_logo.svg',
@@ -321,12 +377,12 @@ class _HomeScreenState extends State<HomeScreen>
                         ),
                       )
                     : SuperProfilePicture(
-                        imageUrl: imageUrl,
-                        fullName: fullName,
+                        imageUrl: imageUrl, // Use the state variable here
+                        fullName: fullName, // Use the state variable here
                         radius: 24,
                         backgroundColor: Colors.white,
                         textColor: _primaryBlue,
-                        fontFamily: _fontFamily, // Apply NotoSerifKhmer
+                        fontFamily: _fontFamily,
                       ),
               ),
             ),
@@ -370,7 +426,7 @@ class _HomeScreenState extends State<HomeScreen>
                         fontWeight: FontWeight.w700,
                         fontSize: 16,
                         color: _darkText,
-                        fontFamily: _fontFamily, // Apply NotoSerifKhmer
+                        fontFamily: _fontFamily,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -379,7 +435,7 @@ class _HomeScreenState extends State<HomeScreen>
                       style: const TextStyle(
                         fontSize: 13,
                         color: _mediumText,
-                        fontFamily: _fontFamily, // Apply NotoSerifKhmer
+                        fontFamily: _fontFamily,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -439,7 +495,7 @@ class _HomeScreenState extends State<HomeScreen>
                               fontWeight: FontWeight.w700,
                               fontSize: 16,
                               color: _darkText,
-                              fontFamily: _fontFamily), // Apply NotoSerifKhmer
+                              fontFamily: _fontFamily),
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -447,7 +503,7 @@ class _HomeScreenState extends State<HomeScreen>
                           style: const TextStyle(
                               fontSize: 13,
                               color: _mediumText,
-                              fontFamily: _fontFamily), // Apply NotoSerifKhmer
+                              fontFamily: _fontFamily),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -501,7 +557,7 @@ class _HomeScreenState extends State<HomeScreen>
                     style: TextStyle(
                         color: _mediumText,
                         fontSize: 14,
-                        fontFamily: _fontFamily), // Apply NotoSerifKhmer
+                        fontFamily: _fontFamily),
                     textAlign: TextAlign.center,
                   ),
                 )
@@ -551,7 +607,6 @@ class _HomeScreenState extends State<HomeScreen>
             'Error',
             'Could not open class details. Class ID is missing.',
             snackPosition: SnackPosition.BOTTOM,
-            // Apply font family to snackbar text
             messageText: Text(
                 'Could not open class details. Class ID is missing.',
                 style: const TextStyle(
@@ -586,7 +641,7 @@ class _HomeScreenState extends State<HomeScreen>
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
                         color: _darkText,
-                        fontFamily: _fontFamily), // Apply NotoSerifKhmer
+                        fontFamily: _fontFamily),
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -594,7 +649,7 @@ class _HomeScreenState extends State<HomeScreen>
                     style: const TextStyle(
                         fontSize: 12,
                         color: _mediumText,
-                        fontFamily: _fontFamily), // Apply NotoSerifKhmer
+                        fontFamily: _fontFamily),
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -602,7 +657,7 @@ class _HomeScreenState extends State<HomeScreen>
                     style: const TextStyle(
                         fontSize: 12,
                         color: _mediumText,
-                        fontFamily: _fontFamily), // Apply NotoSerifKhmer
+                        fontFamily: _fontFamily),
                   ),
                 ],
               ),
