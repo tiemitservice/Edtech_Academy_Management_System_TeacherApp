@@ -263,48 +263,7 @@ class StudentInfoScreen extends StatelessWidget {
             ],
           ),
 
-          // Academic & Attendance Details
-          _buildInfoCard(
-            title: 'Academic & Attendance',
-            children: [
-              _buildInfoRow(Icons.check_circle_outline, 'Attendance Score',
-                  student.attendance?.toString()),
-              _buildInfoRow(
-                  Icons.calendar_today_outlined,
-                  'Last Attendance Date',
-                  student.attendanceDate != null
-                      ? DateFormat('dd MMM yyyy')
-                          .format(student.attendanceDate!)
-                      : 'N/A'),
-              _buildInfoRow(Icons.info_outline, 'Attendance Status',
-                  student.attendanceEnum),
-              const Divider(
-                  height: 20,
-                  thickness: 0.5,
-                  color: AppColors
-                      .borderGrey), // Separator for attendance and scores
-              _buildInfoRow(Icons.score, 'Class Practice',
-                  student.classPractice?.toString()),
-              _buildInfoRow(
-                  Icons.assignment, 'Home Work', student.homeWork?.toString()),
-              _buildInfoRow(Icons.assignment_turned_in, 'Assignment Score',
-                  student.assignmentScore?.toString()),
-              _buildInfoRow(Icons.group, 'Presentation',
-                  student.presentation?.toString()),
-              _buildInfoRow(Icons.quiz, 'Revision Test',
-                  student.revisionTest?.toString()),
-              _buildInfoRow(
-                  Icons.school, 'Final Exam', student.finalExam?.toString()),
-              _buildInfoRow(
-                  Icons.book, 'Work Book', student.workBook?.toString()),
-              _buildInfoRow(Icons.assessment, 'Total Overall Score',
-                  student.totalOverallScore?.toString()),
-              _buildInfoRow(Icons.comment, 'Comments', student.comments),
-              _buildInfoRow(Icons.note, 'Note', student.note),
-              _buildInfoRow(Icons.login, 'Entry Time', student.entryTime),
-              _buildInfoRow(Icons.logout, 'Exit Time', student.exitTime),
-            ],
-          ),
+          // s
         ],
       ),
     );
