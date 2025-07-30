@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -7,7 +6,8 @@ import 'package:school_management_system_teacher_app/screens/home/check_attenden
 import 'package:school_management_system_teacher_app/screens/home/student_list_screen.dart';
 import 'package:school_management_system_teacher_app/screens/home/student_permissions_screen.dart';
 import 'package:school_management_system_teacher_app/utils/app_colors.dart';
-// If you uncommented StudentScoresListScreen before, make sure it's uncommented here too:
+import 'package:school_management_system_teacher_app/controllers/auth_controller.dart'; // Import AuthController
+import 'package:school_management_system_teacher_app/screens/home/custom_drawer.dart'; // Import your CustomDrawer
 
 class TeacherManagementScreen extends StatefulWidget {
   final String classId;
@@ -29,6 +29,12 @@ class TeacherManagementScreen extends StatefulWidget {
 }
 
 class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
+  // --- GlobalKey for ScaffoldState ---
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  // --- AuthController Instance ---
+  late final AuthController _authController;
+
   // --- UI Constants ---
   static const Color _primaryBlue = Color(0xFF1469C7);
   static const Color _lightBackground = Color(0xFFF7F9FC);
@@ -41,6 +47,13 @@ class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
   static const String _fontFamily = AppFonts.fontFamily;
 
   @override
+  void initState() {
+    super.initState();
+    // Initialize AuthController
+    _authController = Get.find<AuthController>();
+  }
+
+  @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarIconBrightness: Brightness.light,
@@ -49,6 +62,14 @@ class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
 
     return Scaffold(
       backgroundColor: _lightBackground,
+      key: _scaffoldKey, // Assign the GlobalKey to the Scaffold
+      // Use endDrawer to make the drawer appear from the right
+      endDrawer: CustomDrawer(
+        onLogout: () {
+          // This callback will trigger the logout action in AuthController
+          _authController.logout();
+        },
+      ),
       appBar: AppBar(
         backgroundColor: _primaryBlue,
         elevation: 0,
@@ -61,12 +82,21 @@ class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
           "Teacher Management",
           style: TextStyle(
             color: Colors.white,
-            fontFamily: _fontFamily, // Apply NotoSerifKhmer
+            fontFamily: _fontFamily,
             fontWeight: FontWeight.w700,
             fontSize: 18,
           ),
         ),
         centerTitle: true,
+        actions: [
+          // Add an IconButton to the actions list to open the endDrawer
+          IconButton(
+            icon: const Icon(Icons.menu_rounded, color: Colors.white, size: 28),
+            onPressed: () {
+              _scaffoldKey.currentState?.openEndDrawer(); // Open the end drawer
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -108,7 +138,7 @@ class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
                     CrossAxisAlignment.start, // Left-align all text
                 children: [
                   Text(
-                    '${widget.className}',
+                    widget.className,
                     style: const TextStyle(
                       fontSize: 16, // Larger, more prominent class name
                       fontWeight: FontWeight.bold, // Extra bold for class name
@@ -207,7 +237,6 @@ class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
           subtitle: "Check Student's ask for permission in each classes",
           onTap: () {
             Get.to(() => StudentPermissionsScreen(
-                  // Make sure StudentScoresListScreen is imported
                   classId: widget.classId,
                   className: widget.className,
                   studentsCount: int.parse(widget.studentsCount),
@@ -265,7 +294,7 @@ class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
                         fontWeight: FontWeight.w700,
                         fontSize: 16,
                         color: _darkText,
-                        fontFamily: _fontFamily, // Apply NotoSerifKhmer
+                        fontFamily: _fontFamily,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -274,7 +303,7 @@ class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
                       style: const TextStyle(
                         fontSize: 13,
                         color: _mediumText,
-                        fontFamily: _fontFamily, // Apply NotoSerifKhmer
+                        fontFamily: _fontFamily,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,

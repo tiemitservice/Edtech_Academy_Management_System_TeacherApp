@@ -1,53 +1,81 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart'; // Required for SvgPicture
 import 'package:get/get.dart';
+import 'package:cached_network_image/cached_network_image.dart'; // <--- NEW: For image caching
+
 import 'package:school_management_system_teacher_app/models/student.dart';
 import 'package:school_management_system_teacher_app/controllers/student_list_controller.dart';
-import 'package:school_management_system_teacher_app/Widget/super_profile_picture.dart';
+import 'package:school_management_system_teacher_app/Widget/super_profile_picture.dart'; // Assuming this widget exists
+import 'package:school_management_system_teacher_app/screens/home/custom_drawer.dart';
 import 'package:school_management_system_teacher_app/utils/app_colors.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:school_management_system_teacher_app/routes/app_routes.dart';
 
-class StudentListScreen extends StatelessWidget {
-  // Make essential parameters required
+// Import your CustomDrawer (ensure the path is correct)
+
+class StudentListScreen extends StatefulWidget {
   final String classId;
   final String className;
   final String subjectName;
-  final String?
-      studentsCount; // This can remain nullable, as it's often a string from navigation args
+  final String? studentsCount;
 
   const StudentListScreen({
     Key? key,
     required this.classId,
     required this.className,
     required this.subjectName,
-    this.studentsCount, // Optional, initial count from previous screen
+    this.studentsCount,
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    // Initialize and put the controller with the required classId.
-    // Get.put is typically called once per controller instance.
-    final StudentListController controller =
-        Get.put(StudentListController(classId: classId));
+  State<StudentListScreen> createState() => _StudentListScreenState();
+}
 
+class _StudentListScreenState extends State<StudentListScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  late final StudentListController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = Get.put(StudentListController(classId: widget.classId));
+  }
+
+  // --- Logout Function for CustomDrawer ---
+  void _handleLogout() {
+    // In a real application, you would perform actual logout logic here:
+    // - Clear user authentication tokens (e.g., from SharedPreferences, GetStorage)
+    // - Invalidate sessions on the backend if necessary
+    // - Clear any cached user-specific data in controllers or memory
+    print("User logged out from StudentListScreen!");
+    // Navigate to the login screen and clear the entire navigation stack
+    Get.offAllNamed(AppRoutes.login); // Ensure AppRoutes.login is defined
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey, // Assign the GlobalKey to the Scaffold
       backgroundColor: AppColors.lightBackground,
-      appBar: _buildAppBar(className),
+      appBar: _buildAppBar(widget.className),
+      endDrawer: CustomDrawer(
+        // Integrate CustomDrawer
+        onLogout: _handleLogout, // Pass the logout callback
+      ),
       body: Column(
         children: [
-          // Header section displaying class info and dynamic student count
           _buildHeader(controller),
           Expanded(
             child: Obx(() {
               if (controller.isLoading.value) {
                 return _buildShimmerList();
               } else if (controller.errorMessage.isNotEmpty) {
-                // Correct retry callback
-                return _buildErrorState(controller.errorMessage.value,
-                    () => controller.fetchStudents());
+                return _buildErrorState(
+                  controller.errorMessage.value,
+                  () => controller.fetchStudents(),
+                );
               } else if (controller.students.isEmpty) {
-                return _buildEmptyState(className);
+                return _buildEmptyState(widget.className);
               } else {
                 return ListView.separated(
                   padding: const EdgeInsets.all(16.0),
@@ -87,18 +115,27 @@ class StudentListScreen extends StatelessWidget {
         ),
       ),
       centerTitle: true,
+      actions: [
+        IconButton(
+          // Button to open the CustomDrawer
+          icon: const Icon(Icons.menu_rounded, color: Colors.white, size: 28),
+          onPressed: () {
+            _scaffoldKey.currentState
+                ?.openEndDrawer(); // Programmatically open the end drawer
+          },
+        ),
+      ],
     );
   }
 
   /// Header widget to display class name, subject, and reactive student count.
   Widget _buildHeader(StudentListController controller) {
     return Container(
-      color: AppColors.primaryBlue, // Top section background
+      color: AppColors.primaryBlue,
       child: Container(
         decoration: const BoxDecoration(
-          color: AppColors.cardBackground, // Content background
-          borderRadius: BorderRadius.vertical(
-              top: Radius.circular(24)), // Rounded top corners
+          color: AppColors.cardBackground,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 25),
         child: Row(
@@ -110,7 +147,7 @@ class StudentListScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    className, // Class name from constructor
+                    widget.className,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -122,7 +159,7 @@ class StudentListScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Subject: $subjectName', // Subject name from constructor
+                    'Subject: ${widget.subjectName}',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
@@ -133,24 +170,25 @@ class StudentListScreen extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 12),
-                  Obx(() => Container(
-                        // Use Obx to react to totalStudentsCount changes
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryBlue.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
+                  Obx(
+                    () => Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryBlue.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'All Students: ${controller.totalStudentsCount.value}',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primaryBlue,
+                          fontFamily: AppFonts.fontFamily,
                         ),
-                        child: Text(
-                          'All Students: ${controller.totalStudentsCount.value}', // Reactive student count
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.primaryBlue,
-                            fontFamily: AppFonts.fontFamily,
-                          ),
-                        ),
-                      )),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -195,13 +233,46 @@ class StudentListScreen extends StatelessWidget {
           padding: const EdgeInsets.all(16.0),
           child: Row(
             children: [
-              SuperProfilePicture(
-                imageUrl: student.avatarUrl,
-                fullName: displayName,
+              // Using CachedNetworkImage for the profile picture
+              CircleAvatar(
                 radius: 30,
                 backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
-                textColor: AppColors.darkText,
-                fontFamily: AppFonts.fontFamily,
+                child: ClipOval(
+                  child: student.avatarUrl != null &&
+                          student.avatarUrl!.isNotEmpty
+                      ? CachedNetworkImage(
+                          imageUrl: student.avatarUrl!,
+                          fit: BoxFit.cover,
+                          width: 60, // 2 * radius
+                          height: 60, // 2 * radius
+                          placeholder: (context, url) => Container(
+                              // Shimmer placeholder
+                              width: 60,
+                              height: 60,
+                              color: AppColors.skeletonHighlightColor),
+                          errorWidget: (context, url,
+                                  error) => // Fallback to text initials
+                              SuperProfilePicture(
+                                  imageUrl:
+                                      null, // Force fallback in SuperProfilePicture
+                                  fullName: displayName,
+                                  radius: 30,
+                                  backgroundColor:
+                                      AppColors.primaryBlue.withOpacity(0.1),
+                                  textColor: AppColors.darkText,
+                                  fontFamily: AppFonts.fontFamily),
+                        )
+                      : SuperProfilePicture(
+                          // Fallback if no URL at all
+                          imageUrl: null,
+                          fullName: displayName,
+                          radius: 30,
+                          backgroundColor:
+                              AppColors.primaryBlue.withOpacity(0.1),
+                          textColor: AppColors.darkText,
+                          fontFamily: AppFonts.fontFamily,
+                        ),
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -229,8 +300,7 @@ class StudentListScreen extends StatelessWidget {
                       ),
                     ),
                     // FIX: Correctly check if phoneNumber is not null and not empty
-                    if (student.phoneNumber !=
-                        student.phoneNumber.isNotEmpty)
+                    if (student.phoneNumber != student.phoneNumber.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(
@@ -290,8 +360,7 @@ class StudentListScreen extends StatelessWidget {
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: AppColors.skeletonBaseColor
-                  .withOpacity(0.5), // Use skeleton color for consistency
+              color: AppColors.skeletonBaseColor.withOpacity(0.5),
               shape: BoxShape.circle,
             ),
           ),
@@ -421,7 +490,7 @@ class StudentListScreen extends StatelessWidget {
                 size: 150, color: AppColors.mediumText.withOpacity(0.5)),
             const SizedBox(height: 24),
             Text(
-              'No Students Found in $className', // Use the provided className
+              'No Students Found in $className',
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -432,7 +501,7 @@ class StudentListScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'There are no student records available for $className at the moment.', // Use the provided className
+              'There are no student records available for $className at the moment.',
               style: const TextStyle(
                 fontSize: 14,
                 color: AppColors.mediumText,

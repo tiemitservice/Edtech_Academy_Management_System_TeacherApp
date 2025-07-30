@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// Defines a set of consistent color constants used throughout the application.
 class AppColors {
-  static const Color primaryBlue = Color(0xFF1469C7);
+  static const Color primaryBlue = Color(0xFF1468C7);
   static const Color lightBackground = Color(0xFFF7F9FC);
   static const Color cardBackground = Colors.white;
   static const Color darkText = Color(0xFF2C3E50);
@@ -13,6 +13,7 @@ class AppColors {
   static const Color pendingOrange = Color(0xFFF39C12);
   static const Color skeletonBaseColor = Color(0xFFE0E0E0);
   static const Color skeletonHighlightColor = Color(0xFFF0F0F0);
+  static const Color lightFillColor = Color(0xFFF4F7F9);
 }
 
 class AppFonts {

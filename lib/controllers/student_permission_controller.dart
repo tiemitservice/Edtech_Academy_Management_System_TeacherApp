@@ -1,14 +1,14 @@
 // lib/controllers/student_permission_controller.dart
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'; // Keep if you use Material widgets directly, but generally not needed in controllers
 import 'package:get/get.dart';
 import 'package:school_management_system_teacher_app/controllers/auth_controller.dart';
 import 'package:school_management_system_teacher_app/models/permission_item.dart';
 import 'package:school_management_system_teacher_app/models/permission_report.dart';
-import 'package:school_management_system_teacher_app/models/student.dart';
+import 'package:school_management_system_teacher_app/models/student.dart'; // Ensure this model is used/needed
 import 'package:school_management_system_teacher_app/services/student_permission_service.dart';
 import 'package:school_management_system_teacher_app/services/student_repository.dart';
-import 'package:school_management_system_teacher_app/utils/app_colors.dart';
-import 'package:flutter/foundation.dart';
+import 'package:school_management_system_teacher_app/utils/app_colors.dart'; // Keep if you use AppColors directly in controller, though often moved to UI
+import 'package:flutter/foundation.dart'; // For debugPrint
 
 class StudentPermissionController extends GetxController {
   // Services
@@ -17,11 +17,26 @@ class StudentPermissionController extends GetxController {
   final AuthController _authController = Get.find<AuthController>();
 
   // Reactive state variables
-  final RxList<PermissionItem> studentPermissions = <PermissionItem>[].obs;
+  final RxList<PermissionItem> _allStudentPermissions = <PermissionItem>[].obs; // Stores the complete, unfiltered list
   final RxBool isLoading = true.obs;
   final RxString errorMessage = ''.obs;
 
-  // Reactive variables for permission counts
+  // Reactive variable for current filter type: 'total' or 'pending'
+  final RxString currentFilter = 'total'.obs; // Default to showing all
+
+  // Computed RxList that automatically filters based on `currentFilter`
+  RxList<PermissionItem> get filteredPermissions {
+    if (currentFilter.value == 'pending') {
+      return _allStudentPermissions
+          .where((p) => p.status.toLowerCase() == 'pending')
+          .toList()
+          .obs; // Return a new RxList
+    } else {
+      return _allStudentPermissions; // Return the full list
+    }
+  }
+
+  // Reactive variables for permission counts (now updated from _allStudentPermissions)
   final RxInt totalPermissions = 0.obs;
   final RxInt pendingPermissions = 0.obs;
   final RxInt approvedPermissions = 0.obs;
@@ -30,29 +45,34 @@ class StudentPermissionController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    // Use `ever` to react to changes in `_allStudentPermissions` for updating counts
+    ever(_allStudentPermissions, (_) => _updatePermissionCounts());
+
     _studentRepository.fetchAllStudents().then((_) {
-      fetchStudentPermissions();
+      fetchStudentPermissions(); // Fetch permissions after students are loaded
     }).catchError((e) {
       errorMessage.value = "Failed to load student data: ${e.toString().replaceFirst('Exception: ', '')}";
       isLoading.value = false;
     });
   }
 
+  // Updates permission counts based on the _allStudentPermissions list
   void _updatePermissionCounts() {
-    totalPermissions.value = studentPermissions.length;
-    pendingPermissions.value = studentPermissions
+    totalPermissions.value = _allStudentPermissions.length;
+    pendingPermissions.value = _allStudentPermissions
         .where((p) => p.status.toLowerCase() == 'pending')
         .length;
-    approvedPermissions.value = studentPermissions
+    approvedPermissions.value = _allStudentPermissions
         .where((p) => p.status.toLowerCase() == 'approved')
         .length;
-    deniedPermissions.value = studentPermissions
+    deniedPermissions.value = _allStudentPermissions
         .where((p) =>
             p.status.toLowerCase() == 'denied' ||
             p.status.toLowerCase() == 'rejected')
         .length;
   }
 
+  // Fetches all student permissions and updates the main list
   Future<void> fetchStudentPermissions() async {
     isLoading.value = true;
     errorMessage.value = '';
@@ -64,22 +84,31 @@ class StudentPermissionController extends GetxController {
         return;
       }
       final allPermissions = await _permissionService.fetchAllPermissions();
-      final filteredPermissions = allPermissions
+      final filteredByTeacherPermissions = allPermissions
           .where((p) => p.sentToStaffId == teacherStaffId)
           .toList();
 
       final List<PermissionItem> enrichedPermissions = [];
-      for (var permission in filteredPermissions) {
+      for (var permission in filteredByTeacherPermissions) {
         final Student? student =
             await _studentRepository.getStudentById(permission.studentId);
         enrichedPermissions.add(permission.copyWith(studentDetails: student));
       }
-      studentPermissions.assignAll(enrichedPermissions);
-      _updatePermissionCounts();
+      _allStudentPermissions.assignAll(enrichedPermissions); // Update the main list
+      // _updatePermissionCounts() will be called automatically by `ever` listener
     } catch (e) {
       errorMessage.value = e.toString().replaceFirst('Exception: ', '');
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  /// Sets the filter for the displayed permissions.
+  /// [filter]: 'total' to show all, 'pending' to show only pending.
+  void setFilter(String filter) {
+    if (currentFilter.value != filter) { // Only update if the filter is actually changing
+      currentFilter.value = filter;
+      debugPrint('Permission filter set to: ${currentFilter.value}');
     }
   }
 
@@ -91,7 +120,7 @@ class StudentPermissionController extends GetxController {
     debugPrint(
         'Attempting to update permission ${permission.id} to $newStatus');
     try {
-      // Step 1: Update the original permission status
+      // Step 1: Update the original permission status on the backend
       await _permissionService.updatePermissionStatus(permission.id, newStatus);
 
       // Step 2: If approved or denied, create a report.
@@ -114,22 +143,22 @@ class StudentPermissionController extends GetxController {
           }
         } catch (e) {
           // Log the report creation error, but don't block the UI feedback
-          // The main action (updating status) was successful.
           debugPrint('!!! FAILED to create permission report: $e');
         }
       }
 
       // Step 3: Update the local UI for immediate feedback
-      final index = studentPermissions.indexWhere((p) => p.id == permission.id);
+      // Find the index in _allStudentPermissions to update the original data
+      final index = _allStudentPermissions.indexWhere((p) => p.id == permission.id);
       if (index != -1) {
-        studentPermissions[index] =
-            studentPermissions[index].copyWith(status: newStatus.toLowerCase());
-        _updatePermissionCounts(); // Recalculate counts
+        _allStudentPermissions[index] =
+            _allStudentPermissions[index].copyWith(status: newStatus.toLowerCase());
+        // _updatePermissionCounts() will be called automatically by `ever` listener
       }
 
       Get.snackbar(
         'Success',
-        'Permission ${newStatus.capitalizeFirst}!',
+        'Permission ${newStatus.capitalizeFirst}!', // Assumes you have capitalizeFirst extension
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: AppColors.successGreen,
         colorText: Colors.white,

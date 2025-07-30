@@ -266,6 +266,15 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 
+  // New method for refreshing data
+  Future<void> _refreshData() async {
+    setState(() {
+      isLoading = true; // Show main loader during refresh
+      _isLoadingClasses = true; // Show schedule loader during refresh
+    });
+    await _loadInitialData(); // Re-run all initial data loading
+  }
+
   // --- UI Build Methods ---
 
   @override
@@ -280,9 +289,6 @@ class _HomeScreenState extends State<HomeScreen>
       key: _scaffoldKey, // Assign the GlobalKey here
       // Pass data to CustomDrawer using the HomeScreen's State variables
       drawer: CustomDrawer(
-        userDisplayName: fullName ?? 'Guest', // Pass fetched full name
-        // userDisplayEmail: , // Pass fetched email
-        userDisplayImageUrl: imageUrl ?? '', // Pass fetched image URL
         onLogout: () {
           // This callback will trigger the logout action in AuthController
           authController.logout();
@@ -303,9 +309,15 @@ class _HomeScreenState extends State<HomeScreen>
                       topRight: Radius.circular(24),
                     ),
                   ),
-                  child: isLoading
-                      ? _buildSkeletonLoader()
-                      : _buildContentListView(),
+                  // Wrap the content with RefreshIndicator
+                  child: RefreshIndicator(
+                    onRefresh: _refreshData, // Call _refreshData on pull
+                    color: _primaryBlue, // Customize refresh indicator color
+                    backgroundColor: Colors.white,
+                    child: isLoading
+                        ? _buildSkeletonLoader()
+                        : _buildContentListView(),
+                  ),
                 ),
               ),
             ],
@@ -351,7 +363,8 @@ class _HomeScreenState extends State<HomeScreen>
           children: [
             // Modified IconButton to open the drawer
             IconButton(
-              icon: const Icon(Icons.menu, color: Colors.white, size: 28),
+              icon: const Icon(Icons.menu_outlined,
+                  color: Colors.white, size: 28),
               onPressed: () {
                 _scaffoldKey.currentState?.openDrawer(); // Open the drawer
               },

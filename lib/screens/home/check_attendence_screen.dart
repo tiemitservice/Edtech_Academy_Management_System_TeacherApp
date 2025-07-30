@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:get/get.dart'; // Ensure GetX is properly configured in your pubspec.yaml
+import 'package:get/get.dart';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math'; // For min function
+import 'dart:math';
 import 'package:http/http.dart' as http;
 
-// Import the SuperProfilePicture widget
-// Make sure this path is correct in your project
 import 'package:school_management_system_teacher_app/Widget/super_profile_picture.dart';
-// Import your AuthController
 import 'package:school_management_system_teacher_app/controllers/auth_controller.dart';
-// Import your AppColors (assuming AppFonts.fontFamily is defined here)
+import 'package:school_management_system_teacher_app/routes/app_routes.dart';
+import 'package:school_management_system_teacher_app/screens/home/custom_drawer.dart';
 import 'package:school_management_system_teacher_app/utils/app_colors.dart';
 import 'package:shimmer/shimmer.dart';
+
+// Import your CustomDrawer here!
 
 // Extension to capitalize the first letter of a string, useful if API returns lowercase enums
 extension StringExtension on String {
@@ -25,6 +25,9 @@ extension StringExtension on String {
 }
 
 // --- DATA MODELS ---
+// (Your existing Student, StaffProfileForDrawer, PositionForDrawer classes go here,
+// assuming they are in separate files as implied by your imports, or if not,
+// ensure they are present in this file or imported correctly.)
 
 class Student {
   final String id;
@@ -193,7 +196,7 @@ class Student {
   }
 }
 
-// --- MAIN WIDGET ---
+// --- MAIN WIDGET (CheckAttendanceScreen) ---
 
 class CheckAttendanceScreen extends StatefulWidget {
   final String classId;
@@ -218,6 +221,7 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
   List<String> _validAttendanceEnums = [];
   bool _isLoadingEnums = true;
   String _errorMessageEnums = '';
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   late Future<List<Student>> _studentListFuture;
   final AuthController _authController = Get.find<AuthController>();
@@ -264,27 +268,6 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
       _errorMessageEnums = '';
     });
     try {
-      // --- IMPORTANT: Replace this with your actual API call to get enums ---
-      // Example of a real API call:
-      // final uri = Uri.parse('YOUR_API_BASE_URL/api/attendance-statuses'); // Example endpoint
-      // final response = await http.get(uri, headers: {
-      //   'Content-Type': 'application/json',
-      //   // Add Authorization header if needed for this endpoint
-      //   // 'Authorization': 'Bearer ${await _authController.getToken()}',
-      // });
-      //
-      // if (response.statusCode == 200) {
-      //   final decodedBody = json.decode(response.body);
-      //   // Assuming your API returns a structure like {"data": ["present", "absent", "late", "permission"]}
-      //   final List<String> fetchedEnums = List<String>.from(decodedBody['data']);
-      //   // Capitalize the first letter for display consistency if your API returns lowercase
-      //   _validAttendanceEnums = fetchedEnums.map((e) => e.capitalizeFirst!).toList();
-      // } else {
-      //   _errorMessageEnums = 'Failed to load attendance options: ${response.statusCode}';
-      //   print('API Error (Enums): ${response.body}');
-      // }
-
-      // --- Mock data for demonstration (remove in production) ---
       await Future.delayed(
           const Duration(seconds: 1)); // Simulate network delay
       _validAttendanceEnums = [
@@ -293,7 +276,6 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
         "Late",
         "Permission",
       ];
-      // --- End Mock data ---
     } catch (e) {
       _errorMessageEnums = 'Error fetching attendance options: ${e.toString()}';
       print(_errorMessageEnums);
@@ -320,8 +302,7 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
   }
 
   Future<List<Student>> _fetchFilteredClassStudents() async {
-    final uri = Uri.parse(
-        'http://188.166.242.109:5000/api/classes');
+    final uri = Uri.parse('http://188.166.242.109:5000/api/classes');
     final staffId = await _authController.getStaffId();
     final token = await _authController.getToken();
 
@@ -354,15 +335,10 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
               'Class with ID "${widget.classId}" not found or you do not have permission to access it.'),
         );
 
-        // Store subject_id, duration, and staff_id from the fetched classJson
-        _currentSubjectId =
-            classJson['subject']; // Assuming 'subject' holds the subject_id
-        _currentDurationId =
-            classJson['duration']; // Assuming 'duration' holds the duration_id
-        _currentStaffId =
-            classJson['staff']; // Assuming 'staff' holds the staff_id
+        _currentSubjectId = classJson['subject'];
+        _currentDurationId = classJson['duration'];
+        _currentStaffId = classJson['staff'];
 
-        // Pass the dynamically fetched _validAttendanceEnums to Student.fromJson
         final fetchedStudents = (classJson['students'] as List<dynamic>?)
                 ?.map((s) => Student.fromJson(s, _validAttendanceEnums))
                 .toList() ??
@@ -419,7 +395,6 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
       return;
     }
 
-    // Check if any student still has "Not Set" status selected before submitting
     final unselectedStudents = _students
         .where((s) => _selectedStatuses[s.id] == Student.notSetStatus)
         .toList();
@@ -432,10 +407,9 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
           backgroundColor: Colors.orange,
         ),
       );
-      return; // Prevent submission if any student is "Not Set"
+      return;
     }
 
-    // Ensure we have the necessary IDs for the attendance report
     if (_currentSubjectId == null ||
         _currentDurationId == null ||
         _currentStaffId == null) {
@@ -460,7 +434,6 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
       if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
     };
 
-    // Payload for updating the 'classes' document (PATCH request)
     final List<Map<String, dynamic>> studentsUpdateData = _students.map((s) {
       final tempStudent = Student(
         id: s.id,
@@ -481,12 +454,11 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
         note: s.note,
         comments: s.comments,
       );
-      // Pass the dynamically fetched _validAttendanceEnums to Student.toJson
       return tempStudent.toJson(_validAttendanceEnums);
     }).toList();
 
-    final updateClassUrl = Uri.parse(
-        'http://188.166.242.109:5000/api/classes/${widget.classId}');
+    final updateClassUrl =
+        Uri.parse('http://188.166.242.109:5000/api/classes/${widget.classId}');
     final updateClassBody = jsonEncode({'students': studentsUpdateData});
 
     print('--- Submitting All Attendance (PATCH Class) ---');
@@ -494,30 +466,26 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
     print('PATCH Headers: $headers');
     print('PATCH Body (full students array): $updateClassBody');
 
-    // Payload for creating a new 'attendancereports' document (POST request)
     final List<Map<String, dynamic>> studentsReportData = _students.map((s) {
       final tempStudent = Student(
         id: s.id,
         name: s.name,
         gender: s.gender,
         avatarUrl: s.avatarUrl,
-        status: _selectedStatuses[s.id]!, // Use the selected status
+        status: _selectedStatuses[s.id]!,
         isSaved: s.isSaved,
-        note: s.note, // Include note if available
+        note: s.note,
       );
-      // For the attendance report, we only need student ID, attendance, checking_at, and note
-      // The toJson method already formats it correctly for this purpose.
       return {
         'student': tempStudent.id,
-        'attendance': tempStudent.status
-            .toLowerCase(), // Ensure lowercase for backend enum
+        'attendance': tempStudent.status.toLowerCase(),
         'checking_at': DateTime.now().toIso8601String(),
         'note': tempStudent.note,
       };
     }).toList();
 
-    final createReportUrl = Uri.parse(
-        'http://188.166.242.109:5000/api/attendancereports');
+    final createReportUrl =
+        Uri.parse('http://188.166.242.109:5000/api/attendancereports');
     final createReportBody = jsonEncode({
       'class_id': widget.classId,
       'subject_id': _currentSubjectId,
@@ -537,7 +505,6 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
       final postFuture =
           http.post(createReportUrl, headers: headers, body: createReportBody);
 
-      // Wait for both futures to complete
       final responses = await Future.wait([patchFuture, postFuture]);
 
       final patchResponse = responses[0];
@@ -557,7 +524,6 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
       }
 
       if (postResponse.statusCode == 201) {
-        // 201 Created for successful POST
         print('POST /api/attendancereports Succeeded.');
       } else {
         allSucceeded = false;
@@ -589,15 +555,14 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
               content: Text('Submission completed with errors:\n$errorMessage',
                   style: const TextStyle(fontFamily: _fontFamily)),
               backgroundColor: Colors.red,
-              duration: const Duration(seconds: 5), // Show for longer
+              duration: const Duration(seconds: 5),
             ),
           );
           setState(() {
             for (var student in _students) {
-              student.isSaved =
-                  false; // Mark as not saved if any error occurred
+              student.isSaved = false;
             }
-            _hasChanges = true; // Keep changes if not all succeeded
+            _hasChanges = true;
           });
         }
       }
@@ -662,6 +627,7 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
 
     return Scaffold(
       backgroundColor: _lightBackground,
+      key: _scaffoldKey,
       appBar: AppBar(
         backgroundColor: _primaryBlue,
         elevation: 0,
@@ -677,16 +643,34 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
                 fontSize: 19,
                 fontFamily: _fontFamily)),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.menu_rounded, color: Colors.white, size: 28),
+            onPressed: () {
+              _scaffoldKey.currentState?.openEndDrawer();
+            },
+          ),
+        ],
       ),
+      // --- HERE IS THE KEY CHANGE ---
+      endDrawer: CustomDrawer(
+        onLogout: () {
+          // You need to define what should happen when logout is triggered from the drawer.
+          // For example, navigate to login screen:
+          _authController
+              .logout(); // Assuming AuthController has a logout method
+          Get.offAllNamed(AppRoutes.login); // Or whatever your login route is
+        },
+      ),
+      // --- END KEY CHANGE ---
       body: Column(
         children: [
           _buildHeader(),
           Expanded(
             child: _isLoadingEnums
-                ? _buildShimmerList() // Show shimmer while enums are loading
+                ? _buildShimmerList()
                 : _errorMessageEnums.isNotEmpty
                     ? Center(
-                        // Show error if enum fetching failed
                         child: Padding(
                           padding: const EdgeInsets.all(20.0),
                           child: Column(
@@ -706,7 +690,7 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
                               const SizedBox(height: 20),
                               ElevatedButton.icon(
                                 onPressed: () {
-                                  _initializeData(); // Retry fetching enums and then students
+                                  _initializeData();
                                 },
                                 icon: const Icon(Icons.refresh),
                                 label: const Text("Retry",
@@ -793,7 +777,6 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
                         },
                       ),
           ),
-          // Moved the submit button into its own private method for clarity
           _buildSubmitButton(),
         ],
       ),
@@ -817,10 +800,8 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
             borderRadius: BorderRadius.circular(12),
           ),
           padding: const EdgeInsets.symmetric(vertical: 12),
-          disabledBackgroundColor:
-              _primaryBlue.withOpacity(0.5), // Disabled color
-          disabledForegroundColor:
-              Colors.white.withOpacity(0.7), // Disabled text color
+          disabledBackgroundColor: _primaryBlue.withOpacity(0.5),
+          disabledForegroundColor: Colors.white.withOpacity(0.7),
         ),
       ),
     );
@@ -921,7 +902,6 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
               });
             }
           },
-          // Pass the dynamically fetched valid enums to the card
           validAttendanceEnums: _validAttendanceEnums,
         );
       },
@@ -993,30 +973,27 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
   }
 }
 
-// --- STUDENT ATTENDANCE CARD WIDGET (Modified for batch submission) ---
-
 class _StudentAttendanceCard extends StatefulWidget {
   final Student student;
   final String selectedStatus;
   final String originalStatus;
   final ValueChanged<String> onStatusChanged;
-  final List<String> validAttendanceEnums; // Receive valid enums as a parameter
+  final List<String> validAttendanceEnums;
 
-  const _StudentAttendanceCard(
-      {Key? key,
-      required this.student,
-      required this.selectedStatus,
-      required this.originalStatus,
-      required this.onStatusChanged,
-      required this.validAttendanceEnums}) // Require valid enums
-      : super(key: key);
+  const _StudentAttendanceCard({
+    Key? key,
+    required this.student,
+    required this.selectedStatus,
+    required this.originalStatus,
+    required this.onStatusChanged,
+    required this.validAttendanceEnums,
+  }) : super(key: key);
 
   @override
   _StudentAttendanceCardState createState() => _StudentAttendanceCardState();
 }
 
 class _StudentAttendanceCardState extends State<_StudentAttendanceCard> {
-  // The dropdown options are now derived from the passed validAttendanceEnums
   List<String> get attendanceOptions => widget.validAttendanceEnums;
 
   static const Color _primaryBlue = Color(0xFF1469C7);
@@ -1026,21 +1003,16 @@ class _StudentAttendanceCardState extends State<_StudentAttendanceCard> {
   static const Color _mediumText = Color(0xFF7F8C8D);
   static const Color _greyBorder = Color(0xFFE0E6ED);
   static const Color _notSetColor = Color(0xFF95A5A6);
-  static const Color _unrecognizedStatusColor =
-      Color(0xFF8D6E63); // Brownish for "uncheck"
+  static const Color _unrecognizedStatusColor = Color(0xFF8D6E63);
 
-  static const String _fontFamily =
-      AppFonts.fontFamily; // Use the global font family
+  static const String _fontFamily = AppFonts.fontFamily;
 
   Color getStatusColor(String status, {bool isBackground = false}) {
-    // Check against dynamically fetched valid enums
     final List<String> validEnums = widget.validAttendanceEnums;
 
-    // Check if the status matches any of the valid enums (case-insensitive)
     for (String validEnum in validEnums) {
       if (status.toLowerCase() == validEnum.toLowerCase()) {
         switch (validEnum) {
-          // Use the capitalized validEnum for switch cases
           case "Permission":
             return isBackground
                 ? const Color(0xFFE7F0FE)
@@ -1061,24 +1033,19 @@ class _StudentAttendanceCardState extends State<_StudentAttendanceCard> {
       }
     }
 
-    // Handle "Not Set" specifically
     if (status == Student.notSetStatus) {
       return isBackground ? const Color(0xFFF0F3F4) : _notSetColor;
     }
 
-    // Default for any other unrecognized status string from API (e.g., "uncheck")
     return isBackground ? const Color(0xFFF5EFEA) : _unrecognizedStatusColor;
   }
 
   IconData getStatusIcon(String status) {
-    // Check against dynamically fetched valid enums
     final List<String> validEnums = widget.validAttendanceEnums;
 
-    // Check if the status matches any of the valid enums (case-insensitive)
     for (String validEnum in validEnums) {
       if (status.toLowerCase() == validEnum.toLowerCase()) {
         switch (validEnum) {
-          // Use the capitalized validEnum for switch cases
           case "Permission":
             return Icons.insert_drive_file_outlined;
           case "Late":
@@ -1091,13 +1058,11 @@ class _StudentAttendanceCardState extends State<_StudentAttendanceCard> {
       }
     }
 
-    // Handle "Not Set" specifically
     if (status == Student.notSetStatus) {
       return Icons.info_outline;
     }
 
-    // Default for any other unrecognized status string from API
-    return Icons.help_outline; // Changed to a question mark icon for clarity
+    return Icons.help_outline;
   }
 
   Widget buildStatusItem(String status) {
@@ -1115,15 +1080,10 @@ class _StudentAttendanceCardState extends State<_StudentAttendanceCard> {
 
   @override
   Widget build(BuildContext context) {
-    // isDone logic:
-    // 1. Selected status matches original status (from API load)
-    // 2. Student was initially marked as saved (meaning API provided a valid enum)
-    // 3. The status is NOT "Not Set" (because "Not Set" means it's not a recorded attendance)
     bool isDone = widget.selectedStatus == widget.originalStatus &&
         widget.student.isSaved &&
         widget.selectedStatus != Student.notSetStatus;
 
-    // hasPendingLocalChange: True if the user has changed the status from its original API value.
     bool hasPendingLocalChange = widget.selectedStatus != widget.originalStatus;
 
     return Container(
@@ -1134,9 +1094,8 @@ class _StudentAttendanceCardState extends State<_StudentAttendanceCard> {
         border: Border(
           left: BorderSide(
             color: hasPendingLocalChange
-                ? _primaryBlue // Indicate pending changes with primary blue
-                : getStatusColor(
-                    widget.selectedStatus), // Otherwise, use status color
+                ? _primaryBlue
+                : getStatusColor(widget.selectedStatus),
             width: 5,
           ),
         ),
@@ -1237,7 +1196,6 @@ class _StudentAttendanceCardState extends State<_StudentAttendanceCard> {
                     ),
                     if (isDone) ...[
                       const SizedBox(width: 8),
-                      // Check icon color now follows the status color
                       Icon(Icons.check_circle,
                           color: getStatusColor(widget.selectedStatus),
                           size: 28),
@@ -1257,7 +1215,6 @@ class _StudentAttendanceCardState extends State<_StudentAttendanceCard> {
     );
   }
 
-  // Helper method to show the PopupMenuButton
   void _showPopupMenu(BuildContext context) async {
     final RenderBox button = context.findRenderObject() as RenderBox;
     final RenderBox overlay =
@@ -1274,7 +1231,6 @@ class _StudentAttendanceCardState extends State<_StudentAttendanceCard> {
     final String? result = await showMenu<String>(
       context: context,
       position: position,
-      // Use the dynamically fetched attendance options
       items: attendanceOptions.map((String option) {
         return PopupMenuItem<String>(
           value: option,

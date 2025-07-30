@@ -18,7 +18,18 @@ class StudentInfoScreen extends StatelessWidget {
       : super(key: key);
 
   // Helper function to launch a phone call
-  Future<void> _makePhoneCall(String phoneNumber) async {
+  Future<void> _launchPhone(String phoneNumber) async {
+    // Ensure phoneNumber is not null or empty before launching
+    if (phoneNumber.isEmpty) {
+      Get.snackbar(
+        'No Number',
+        'Phone number not available.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppColors.declineRed,
+        colorText: Colors.white,
+      );
+      return;
+    }
     final Uri launchUri = Uri(
       scheme: 'tel',
       path: phoneNumber,
@@ -29,7 +40,7 @@ class StudentInfoScreen extends StatelessWidget {
       } else {
         Get.snackbar(
           'Call Failed',
-          'Could not launch $phoneNumber',
+          'Could not launch dialer for $phoneNumber',
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: AppColors.declineRed,
           colorText: Colors.white,
@@ -38,7 +49,47 @@ class StudentInfoScreen extends StatelessWidget {
     } catch (e) {
       Get.snackbar(
         'Error',
-        'An error occurred while trying to call: $e',
+        'An error occurred while trying to call: ${e.toString().split(':')[0]}',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppColors.declineRed,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  // Helper function to launch an email app
+  Future<void> _launchEmail(String emailAddress) async {
+    // Ensure emailAddress is not null or empty before launching
+    if (emailAddress.isEmpty) {
+      Get.snackbar(
+        'No Email',
+        'Email address not available.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppColors.declineRed,
+        colorText: Colors.white,
+      );
+      return;
+    }
+    final Uri launchUri = Uri(
+      scheme: 'mailto',
+      path: emailAddress,
+    );
+    try {
+      if (await canLaunchUrl(launchUri)) {
+        await launchUrl(launchUri);
+      } else {
+        Get.snackbar(
+          'Email Failed',
+          'Could not launch email app for $emailAddress',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: AppColors.declineRed,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'An error occurred while trying to email: ${e.toString().split(':')[0]}',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: AppColors.declineRed,
         colorText: Colors.white,
@@ -89,6 +140,7 @@ class StudentInfoScreen extends StatelessWidget {
   }
 
   Widget _buildStudentDetails(Student student) {
+    // Ensure AddressService is initialized globally (e.g., in main.dart via Get.put)
     final AddressService addressService = Get.find<AddressService>();
 
     final bool hasFamilyInfo = (student.fatherName?.isNotEmpty ?? false) ||
@@ -184,18 +236,24 @@ class StudentInfoScreen extends StatelessWidget {
                   student.dateOfBirth != null
                       ? DateFormat('dd MMM yyyy').format(student.dateOfBirth!)
                       : 'N/A'),
-              // Make Phone Number tappable
+              // Student Phone Number - Correctly handles null/empty and launches
               _buildTappableInfoRow(
-                  Icons.phone, 'Phone Number', student.phoneNumber, () {
-                if (student.phoneNumber != student.phoneNumber.isNotEmpty) {
-                  _makePhoneCall(student.phoneNumber);
-                } else {
-                  Get.snackbar(
-                      'No Number', 'Student phone number not available.',
-                      snackPosition: SnackPosition.BOTTOM);
-                }
-              }),
-              _buildInfoRow(Icons.email, 'Email', student.email),
+                  Icons.phone,
+                  'Phone Number',
+                  student.phoneNumber,
+                  // Corrected onTap logic: only provide a function if phoneNumber is valid
+                  student.phoneNumber.isNotEmpty == true
+                      ? () => _launchPhone(student.phoneNumber)
+                      : null), // Pass null if not tappable
+              // Student Email - Correctly handles null/empty and launches
+              _buildTappableInfoRow(
+                  Icons.email,
+                  'Email',
+                  student.email,
+                  // Corrected onTap logic: only provide a function if email is valid
+                  student.email?.isNotEmpty == true
+                      ? () => _launchEmail(student.email!)
+                      : null), // Pass null if not tappable
 
               // Separate address components
               const Divider(
@@ -218,35 +276,27 @@ class StudentInfoScreen extends StatelessWidget {
             title: 'Family Information',
             children: [
               if (hasFamilyInfo) ...[
-                // Display if any family info exists
                 _buildInfoRow(
                     Icons.person, 'Father\'s Name', student.fatherName),
+                // Father's Phone - Correctly handles null/empty and launches
                 _buildTappableInfoRow(
-                    Icons.phone, 'Father\'s Phone', student.fatherPhone, () {
-                  if (student.fatherPhone != null &&
-                      student.fatherPhone!.isNotEmpty) {
-                    _makePhoneCall(student.fatherPhone!);
-                  } else {
-                    Get.snackbar(
-                        'No Number', 'Father\'s phone number not available.',
-                        snackPosition: SnackPosition.BOTTOM);
-                  }
-                }),
+                    Icons.phone,
+                    'Father\'s Phone',
+                    student.fatherPhone,
+                    student.fatherPhone?.isNotEmpty == true
+                        ? () => _launchPhone(student.fatherPhone!)
+                        : null),
                 _buildInfoRow(
                     Icons.person, 'Mother\'s Name', student.motherName),
+                // Mother's Phone - Correctly handles null/empty and launches
                 _buildTappableInfoRow(
-                    Icons.phone, 'Mother\'s Phone', student.motherPhone, () {
-                  if (student.motherPhone != null &&
-                      student.motherPhone!.isNotEmpty) {
-                    _makePhoneCall(student.motherPhone!);
-                  } else {
-                    Get.snackbar(
-                        'No Number', 'Mother\'s phone number not available.',
-                        snackPosition: SnackPosition.BOTTOM);
-                  }
-                }),
+                    Icons.phone,
+                    'Mother\'s Phone',
+                    student.motherPhone,
+                    student.motherPhone?.isNotEmpty == true
+                        ? () => _launchPhone(student.motherPhone!)
+                        : null),
               ] else ...[
-                // Display if no family info exists
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 8.0),
                   child: Text(
@@ -262,8 +312,6 @@ class StudentInfoScreen extends StatelessWidget {
               ],
             ],
           ),
-
-          // s
         ],
       ),
     );
@@ -306,6 +354,7 @@ class StudentInfoScreen extends StatelessWidget {
   }
 
   // Original helper to build a single information row with icon and text (no changes)
+  // This is used for non-tappable rows.
   Widget _buildInfoRow(IconData icon, String label, String? value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10.0),
@@ -351,16 +400,15 @@ class StudentInfoScreen extends StatelessWidget {
     );
   }
 
-  // NEW helper to build a tappable information row for phone numbers
+  // Modified helper to build a tappable information row
   Widget _buildTappableInfoRow(
-      IconData icon, String label, String? value, VoidCallback onTap) {
+      IconData icon, String label, String? value, VoidCallback? onTap) {
+    // onTap can now be null, so GestureDetector's onTap will be null too.
+    final bool isValueAvailable = value != null && value.isNotEmpty;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10.0),
       child: GestureDetector(
-        // Use GestureDetector to make the row tappable
-        onTap: value != null && value.isNotEmpty
-            ? onTap
-            : null, // Only enable tap if value exists
+        onTap: onTap, // Directly pass the onTap callback
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -388,22 +436,26 @@ class StudentInfoScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    value ?? 'N/A',
+                    isValueAvailable ? value : 'N/A',
                     style: TextStyle(
                       fontSize: 17,
-                      // Adjusted color for tappable numbers
-                      color: (value != null && value.isNotEmpty)
+                      color: isValueAvailable
                           ? AppColors.primaryBlue
-                          : AppColors.darkText,
+                          : AppColors
+                              .darkText, // Use primary blue for active links
                       fontFamily: AppFonts.fontFamily,
-                      decoration: (value != null && value.isNotEmpty)
+                      decoration: isValueAvailable
                           ? TextDecoration.underline
-                          : TextDecoration.none,
+                          : TextDecoration.none, // Underline active links
                     ),
                   ),
                 ],
               ),
             ),
+            if (isValueAvailable) // Show launch icon only if value is available
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0, top: 8.0),
+              ),
           ],
         ),
       ),
@@ -426,8 +478,6 @@ class StudentInfoScreen extends StatelessWidget {
                   const CircleAvatar(radius: 60, backgroundColor: Colors.white),
                   const SizedBox(height: 16),
                   Container(height: 24, width: 200, color: Colors.white),
-                  const SizedBox(height: 8),
-                  Container(height: 16, width: 150, color: Colors.white),
                   const SizedBox(height: 8),
                   Container(height: 16, width: 100, color: Colors.white),
                   const SizedBox(height: 24),

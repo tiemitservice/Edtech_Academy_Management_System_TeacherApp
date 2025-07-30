@@ -9,7 +9,6 @@ import 'package:school_management_system_teacher_app/utils/app_colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:school_management_system_teacher_app/controllers/auth_controller.dart';
 import 'package:school_management_system_teacher_app/routes/app_routes.dart';
-import 'package:school_management_system_teacher_app/screens/auth/forgot_password_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SignInScreen extends StatefulWidget {

@@ -12,11 +12,13 @@ class StaffProfile {
   final String imageUrl;
   final String fullName;
   final String email;
+  final String? positionId; // Added to store the position ID
 
   StaffProfile({
     required this.imageUrl,
     required this.fullName,
     required this.email,
+    this.positionId,
   });
 
   factory StaffProfile.fromJson(Map<String, dynamic> json) {
@@ -24,6 +26,22 @@ class StaffProfile {
       imageUrl: json['image'] as String? ?? '',
       fullName: json['en_name'] as String? ?? '',
       email: json['email'] as String? ?? '',
+      positionId: json['position'] as String?, // Extract position ID
+    );
+  }
+}
+
+/// Represents the data structure for a staff position.
+class Position {
+  final String id;
+  final String name;
+
+  Position({required this.id, required this.name});
+
+  factory Position.fromJson(Map<String, dynamic> json) {
+    return Position(
+      id: json['_id'] as String,
+      name: json['name'] as String,
     );
   }
 }
@@ -41,6 +59,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   StaffProfile? _userProfile;
   bool _isLoading = true;
   String? _errorMessage;
+  String?
+      _userPositionName; // Stores the resolved position name (e.g., "Teacher")
+  List<Position> _allPositions =
+      []; // Stores all positions fetched from the API
 
   static const Color _primaryBlue = Color(0xFF1469C7);
   static const Color _darkText = Color(0xFF2C3E50);
@@ -56,7 +78,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.initState();
     try {
       _authController = Get.find<AuthController>();
-      _fetchUserProfile();
+      _fetchInitialData(); // Call a new combined fetch function
     } catch (e) {
       print("ERROR: AuthController not found in ProfileScreen: $e");
       setState(() {
@@ -64,27 +86,74 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _isLoading = false;
       });
       // Also show a snackbar for immediate feedback
-      Get.snackbar('Initialization Error',
+      Get.snackbar(
+        'Initialization Error',
+        'Could not find user session. Please ensure you are logged in.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: _errorRed,
+        colorText: Colors.white,
+        messageText: Text(
           'Could not find user session. Please ensure you are logged in.',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: _errorRed,
-          colorText: Colors.white,
-          messageText: Text(
-              'Could not find user session. Please ensure you are logged in.',
-              style: const TextStyle(
-                  fontFamily: _fontFamily, color: Colors.white)),
-          titleText: Text('Initialization Error',
-              style: const TextStyle(
-                  fontFamily: _fontFamily, color: Colors.white)));
+          style: const TextStyle(fontFamily: _fontFamily, color: Colors.white),
+        ),
+        titleText: Text(
+          'Initialization Error',
+          style: const TextStyle(fontFamily: _fontFamily, color: Colors.white),
+        ),
+      );
     }
   }
 
-  Future<void> _fetchUserProfile() async {
+  // New function to fetch both user profile and positions
+  Future<void> _fetchInitialData() async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
       _userProfile = null;
+      _userPositionName = null; // Clear previous position name
     });
+
+    try {
+      await _fetchAllPositions(); // First, fetch all positions
+      await _fetchUserProfile(); // Then, fetch the user profile and determine their position
+    } on Exception catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage =
+              'An unexpected error occurred during data fetching: $e';
+          _isLoading = false;
+        });
+      }
+      print('Error fetching initial data: $e');
+    }
+  }
+
+  // Fetches all available positions from the API
+  Future<void> _fetchAllPositions() async {
+    try {
+      final response = await http
+          .get(Uri.parse('http://188.166.242.109:5000/api/positions'));
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        final List<dynamic> positionListJson = jsonData['data'];
+        _allPositions =
+            positionListJson.map((json) => Position.fromJson(json)).toList();
+        print(
+            "DEBUG: _fetchAllPositions: Fetched ${_allPositions.length} positions.");
+      } else {
+        print('Failed to load positions: ${response.statusCode}');
+        // You might want to set a non-critical error message here if position data is crucial
+      }
+    } on Exception catch (e) {
+      print('Error fetching positions: $e');
+      // You might want to set a non-critical error message here
+    }
+  }
+
+  Future<void> _fetchUserProfile() async {
+    // Keep isLoading true, as _fetchInitialData handles its final state
+    _errorMessage = null;
+    _userProfile = null;
 
     try {
       final userEmail = await _authController.getUserEmail();
@@ -102,7 +171,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
 
       final response = await http.get(
-          Uri.parse('http://188.166.242.109:5000/api/staffs?email=$userEmail'));
+        Uri.parse('http://188.166.242.109:5000/api/staffs?email=$userEmail'),
+      );
       print(
           "DEBUG: ProfileScreen _fetchUserProfile: API Response Status: ${response.statusCode}");
       print(
@@ -120,6 +190,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           if (mounted) {
             setState(() {
               _userProfile = StaffProfile.fromJson(userMap);
+              // Resolve the user's position name using the fetched _allPositions
+              if (_userProfile!.positionId != null) {
+                final matchedPosition = _allPositions.firstWhereOrNull(
+                  (pos) => pos.id == _userProfile!.positionId,
+                );
+                _userPositionName =
+                    matchedPosition?.name; // Set the resolved name
+              }
               _isLoading = false;
             });
           }
@@ -303,7 +381,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (shouldLogout == true) {
       await _authController.deleteToken();
-      Get.toNamed('/login'); // Navigate to login and clear stack
+      Get.offAllNamed(
+          '/login'); // Navigate to login and clear all previous routes
     }
   }
 
@@ -317,7 +396,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           icon:
               const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.black),
           onPressed: () {
-            Get.toNamed('/home'); // Navigate to home and clear stack
+            Get.offAllNamed('/home'); // Navigate to home and clear stack
           },
         ),
         title: const Text(
@@ -441,7 +520,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       textColor = _darkText;
       onMainActionButtonTap = () async {
         await _authController.deleteToken(); // Clear token
-        Get.toNamed('/login'); // Navigate to login
+        Get.offAllNamed('/login'); // Navigate to login and clear stack
       };
       mainActionButtonText = 'Log In Again';
     } else if (isConnectionError || isGenericApiError) {
@@ -451,7 +530,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       displayMessage = message;
       titleColor = _errorRed;
       textColor = _darkText;
-      onMainActionButtonTap = _fetchUserProfile;
+      onMainActionButtonTap = _fetchInitialData; // Retry fetching all data
       mainActionButtonText = 'Retry';
     } else if (isWarning) {
       icon = Icons.warning_amber_rounded;
@@ -463,9 +542,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       onMainActionButtonTap = () {
         // Navigate to edit profile, and refresh this screen on return
         Get.toNamed('/edit-profile')?.then((result) {
-          // You might get 'true' on successful edit, or null/false otherwise.
           // Refresh regardless to ensure state consistency.
-          _fetchUserProfile();
+          _fetchInitialData(); // Re-fetch all data after editing
         });
       };
       mainActionButtonText = 'Edit Profile';
@@ -537,6 +615,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
     }
 
+    // Determine if the user has a "verified" position (Teacher, HR, or Admin)
+    final bool hasVerifiedPosition = _userPositionName != null &&
+        (_userPositionName!.toLowerCase() == 'teacher' ||
+            _userPositionName!.toLowerCase() == 'hr' ||
+            _userPositionName!.toLowerCase() == 'admin');
+
     return SingleChildScrollView(
       // Added SingleChildScrollView to prevent overflow on small screens
       padding: const EdgeInsets.all(20),
@@ -562,17 +646,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          Text(
-            _userProfile!.fullName.isNotEmpty
-                ? _userProfile!.fullName
-                : 'No Name Provided',
-            style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                fontFamily: _fontFamily, // Apply NotoSerifKhmer
-                color: _userProfile!.fullName.isNotEmpty
-                    ? _darkText
-                    : Colors.grey),
+          // Use a Row to display the full name and the verified icon side-by-side
+          Row(
+            mainAxisAlignment:
+                MainAxisAlignment.center, // Center the row content
+            mainAxisSize: MainAxisSize.min, // Make the row fit its children
+            children: [
+              Text(
+                _userProfile!.fullName.isNotEmpty
+                    ? _userProfile!.fullName
+                    : 'No Name Provided',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: _fontFamily, // Apply NotoSerifKhmer
+                    color: _userProfile!.fullName.isNotEmpty
+                        ? _darkText
+                        : Colors.grey),
+              ),
+              if (hasVerifiedPosition) // Conditionally display the verified icon
+                Padding(
+                  padding: const EdgeInsets.only(
+                      left: 6.0), // Add some spacing between text and icon
+                  child: Icon(
+                    Icons.verified, // The verified icon
+                    color: Colors
+                        .blue.shade600, // A common color for verified badges
+                    size: 20, // Adjust size as needed
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: 4),
           Container(
@@ -657,11 +760,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onTap: () {
               Get.toNamed('/edit-profile')?.then((result) {
                 // Refresh profile data when returning from edit screen
-                _fetchUserProfile();
+                _fetchInitialData(); // Call the combined fetch function
               });
             },
           ),
-          // const Divider(height: 1),
+          // const Divider(height: 1), // Uncomment if you want the settings ListTile back
           // ListTile(
           //   leading: const Icon(Icons.settings),
           //   title: const Text('Settings',
