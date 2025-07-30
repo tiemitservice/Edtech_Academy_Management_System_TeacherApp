@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:school_management_system_teacher_app/controllers/auth_controller.dart';
 import 'package:school_management_system_teacher_app/routes/app_routes.dart';
 import 'package:school_management_system_teacher_app/screens/auth/forgot_password_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SignInScreen extends StatefulWidget {
   @override
@@ -425,14 +426,12 @@ class _SignInScreenState extends State<SignInScreen> {
                         ],
                       ),
                       TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => ForgotPasswordScreen(
-                                  email: _emailController.text),
-                            ),
-                          );
+                        onPressed: () async {
+                          final Uri url = Uri.parse(
+                              'http://188.166.242.109/forget-password');
+                          if (!await launchUrl(url)) {
+                            throw Exception('Could not launch $url');
+                          }
                         },
                         child: const Text(
                           'Forgot Password?',
