@@ -12,14 +12,17 @@ import 'package:flutter/foundation.dart'; // For debugPrint
 
 class StudentPermissionController extends GetxController {
   // Services
-  final StudentPermissionService _permissionService = Get.find<StudentPermissionService>();
+  final StudentPermissionService _permissionService =
+      Get.find<StudentPermissionService>();
   final StudentRepository _studentRepository = Get.find<StudentRepository>();
   final AuthController _authController = Get.find<AuthController>();
 
   // Reactive state variables
-  final RxList<PermissionItem> _allStudentPermissions = <PermissionItem>[].obs; // Stores the complete, unfiltered list
+  final RxList<PermissionItem> _allStudentPermissions =
+      <PermissionItem>[].obs; // Stores the complete, unfiltered list
   final RxBool isLoading = true.obs;
   final RxString errorMessage = ''.obs;
+  final RxBool isRetrying = false.obs;
 
   // Reactive variable for current filter type: 'total' or 'pending'
   final RxString currentFilter = 'total'.obs; // Default to showing all
@@ -51,7 +54,8 @@ class StudentPermissionController extends GetxController {
     _studentRepository.fetchAllStudents().then((_) {
       fetchStudentPermissions(); // Fetch permissions after students are loaded
     }).catchError((e) {
-      errorMessage.value = "Failed to load student data: ${e.toString().replaceFirst('Exception: ', '')}";
+      errorMessage.value =
+          "Failed to load student data: ${e.toString().replaceFirst('Exception: ', '')}";
       isLoading.value = false;
     });
   }
@@ -94,7 +98,8 @@ class StudentPermissionController extends GetxController {
             await _studentRepository.getStudentById(permission.studentId);
         enrichedPermissions.add(permission.copyWith(studentDetails: student));
       }
-      _allStudentPermissions.assignAll(enrichedPermissions); // Update the main list
+      _allStudentPermissions
+          .assignAll(enrichedPermissions); // Update the main list
       // _updatePermissionCounts() will be called automatically by `ever` listener
     } catch (e) {
       errorMessage.value = e.toString().replaceFirst('Exception: ', '');
@@ -103,10 +108,17 @@ class StudentPermissionController extends GetxController {
     }
   }
 
+  Future<void> autoRetryFetch() async {
+    isRetrying.value = true;
+    await fetchStudentPermissions();
+    isRetrying.value = false;
+  }
+
   /// Sets the filter for the displayed permissions.
   /// [filter]: 'total' to show all, 'pending' to show only pending.
   void setFilter(String filter) {
-    if (currentFilter.value != filter) { // Only update if the filter is actually changing
+    if (currentFilter.value != filter) {
+      // Only update if the filter is actually changing
       currentFilter.value = filter;
       debugPrint('Permission filter set to: ${currentFilter.value}');
     }
@@ -149,10 +161,11 @@ class StudentPermissionController extends GetxController {
 
       // Step 3: Update the local UI for immediate feedback
       // Find the index in _allStudentPermissions to update the original data
-      final index = _allStudentPermissions.indexWhere((p) => p.id == permission.id);
+      final index =
+          _allStudentPermissions.indexWhere((p) => p.id == permission.id);
       if (index != -1) {
-        _allStudentPermissions[index] =
-            _allStudentPermissions[index].copyWith(status: newStatus.toLowerCase());
+        _allStudentPermissions[index] = _allStudentPermissions[index]
+            .copyWith(status: newStatus.toLowerCase());
         // _updatePermissionCounts() will be called automatically by `ever` listener
       }
 

@@ -11,17 +11,11 @@ import 'package:school_management_system_teacher_app/Widget/super_profile_pictur
 import 'package:school_management_system_teacher_app/controllers/auth_controller.dart';
 import 'package:school_management_system_teacher_app/routes/app_routes.dart';
 
-// Ensure your `AppFonts` is correctly imported or defined.
-// If it's a static class/const, ensure its import path.
-// For example: `import 'package:school_management_system_teacher_app/utils/app_fonts.dart';`
-// For simplicity in this example, I'll assume AppFonts.fontFamily is available.
-
 class StudentPermissionsScreen extends StatefulWidget {
   final String classId;
   final String className;
-  final int studentsCount; // This might become unused if data is fully from API
-  final String
-      subjectName; // This might become unused if data is fully from API
+  final int studentsCount;
+  final String subjectName;
 
   const StudentPermissionsScreen({
     Key? key,
@@ -42,18 +36,13 @@ class _StudentPermissionsScreenState extends State<StudentPermissionsScreen> {
   late final StudentPermissionController _studentPermissionController;
   late final AuthController _authController;
 
+  bool _hasAttemptedAutoRetry = false;
+
   @override
   void initState() {
     super.initState();
     _studentPermissionController = Get.find<StudentPermissionController>();
     _authController = Get.find<AuthController>();
-    // Call fetch permissions here to ensure data is loaded when screen initializes
-    // The controller's onInit already calls it after student data loads,
-    // so this might be redundant unless you want to re-fetch on every screen entry.
-    // Consider if you need to pass widget.classId to the controller's fetch method
-    // if the permissions are specific to a class. Currently, your controller
-    // uses Get.arguments['classId'], which should be fine if you're navigating
-    // with Get.toNamed(AppRoutes.studentPermission, arguments: {'classId': widget.classId});
   }
 
   @override
@@ -76,13 +65,20 @@ class _StudentPermissionsScreenState extends State<StudentPermissionsScreen> {
               if (_studentPermissionController.isLoading.value) {
                 return _buildShimmerList();
               } else if (_studentPermissionController.errorMessage.isNotEmpty) {
+                // If there's an error and we haven't tried to auto-retry yet,
+                // trigger the auto-retry once.
+                if (!_hasAttemptedAutoRetry) {
+                  _hasAttemptedAutoRetry = true;
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    _studentPermissionController.autoRetryFetch();
+                  });
+                }
                 return _buildErrorState(
                   _studentPermissionController.errorMessage.value,
                   () => _studentPermissionController.fetchStudentPermissions(),
                 );
               } else if (_studentPermissionController
                   .filteredPermissions.isEmpty) {
-                // Use filteredPermissions for the empty state check
                 return _buildEmptyState();
               } else {
                 return RefreshIndicator(
@@ -92,7 +88,6 @@ class _StudentPermissionsScreenState extends State<StudentPermissionsScreen> {
                       _studentPermissionController.fetchStudentPermissions(),
                   child: ListView.separated(
                     padding: const EdgeInsets.all(16.0),
-                    // Use filteredPermissions here to display the items
                     itemCount:
                         _studentPermissionController.filteredPermissions.length,
                     separatorBuilder: (context, index) =>
@@ -146,9 +141,6 @@ class _StudentPermissionsScreenState extends State<StudentPermissionsScreen> {
   }
 
   Widget _buildHeader() {
-    // You can access the controller directly in build,
-    // or keep it passed from the state if you prefer.
-    // For simplicity, I'm using the _studentPermissionController field directly.
     return Container(
       color: AppColors.primaryBlue,
       child: Container(
@@ -172,7 +164,6 @@ class _StudentPermissionsScreenState extends State<StudentPermissionsScreen> {
                           _studentPermissionController.pendingPermissions.value
                               .toString(),
                           AppColors.pendingOrange,
-                          // Pass `isSelected` based on the controller's `currentFilter`
                           isSelected: _studentPermissionController
                                   .currentFilter.value ==
                               'pending',
@@ -189,7 +180,6 @@ class _StudentPermissionsScreenState extends State<StudentPermissionsScreen> {
                           _studentPermissionController.totalPermissions.value
                               .toString(),
                           AppColors.primaryBlue,
-                          // Pass `isSelected` based on the controller's `currentFilter`
                           isSelected: _studentPermissionController
                                   .currentFilter.value ==
                               'total',
@@ -204,24 +194,19 @@ class _StudentPermissionsScreenState extends State<StudentPermissionsScreen> {
     );
   }
 
-  // Modified _buildCountBadge to accept an `isSelected` parameter
   Widget _buildCountBadge(String title, String count, Color color,
       {bool isSelected = false}) {
     return Container(
       decoration: BoxDecoration(
-        color: color
-            .withOpacity(isSelected ? 0.2 : 0.08), // More opaque if selected
+        color: color.withOpacity(isSelected ? 0.2 : 0.08),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isSelected
-              ? color
-              : color.withOpacity(0.3), // Solid color border if selected
-          width: isSelected ? 2.0 : 1.0, // Slightly thicker border if selected
+          color: isSelected ? color : color.withOpacity(0.3),
+          width: isSelected ? 2.0 : 1.0,
         ),
         boxShadow: [
           BoxShadow(
-            color: color
-                .withOpacity(isSelected ? 0.2 : 0.1), // More shadow if selected
+            color: color.withOpacity(isSelected ? 0.2 : 0.1),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -301,37 +286,55 @@ class _StudentPermissionsScreenState extends State<StudentPermissionsScreen> {
   }
 
   Widget _buildErrorState(String errorMessage, VoidCallback onRetry) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.cloud_off_rounded,
-                color: AppColors.declineRed, size: 60),
-            const SizedBox(height: 16),
-            Text('Failed to Load Permissions',
+    return Obx(() {
+      final isRetrying = _studentPermissionController.isRetrying.value;
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.cloud_off_rounded,
+                  color: AppColors.declineRed, size: 60),
+              const SizedBox(height: 16),
+              Text(
+                'Failed to Load Permissions',
                 style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    fontFamily: AppFonts.fontFamily)),
-            const SizedBox(height: 8),
-            Text(errorMessage,
+                    fontFamily: AppFonts.fontFamily),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                errorMessage,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                     fontSize: 14,
                     color: AppColors.mediumText,
-                    fontFamily: AppFonts.fontFamily)),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Retry'),
-            ),
-          ],
+                    fontFamily: AppFonts.fontFamily),
+              ),
+              const SizedBox(height: 24),
+              // Show a progress indicator during the auto-retry attempt
+              if (isRetrying)
+                const CircularProgressIndicator(
+                  valueColor:
+                      AlwaysStoppedAnimation<Color>(AppColors.primaryBlue),
+                )
+              else
+                ElevatedButton.icon(
+                  onPressed: onRetry,
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text('Retry'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryBlue,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+            ],
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 
   Widget _buildEmptyState() {
@@ -386,12 +389,13 @@ class StudentPermissionCard extends StatelessWidget {
         return isBackground
             ? AppColors.pendingOrange.withOpacity(0.1)
             : AppColors.pendingOrange;
-      case "accepted":
+      case "approved": // Use 'approved' to match controller
+      case "accepted": // Use 'accepted' to match controller
         return isBackground
             ? AppColors.successGreen.withOpacity(0.1)
             : AppColors.successGreen;
       case "denied":
-      case "rejected": // Ensure "rejected" is also handled for denied status
+      case "rejected":
         return isBackground
             ? AppColors.declineRed.withOpacity(0.1)
             : AppColors.declineRed;
@@ -522,8 +526,7 @@ class StudentPermissionCard extends StatelessWidget {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      controller.updatePermissionStatus(permission,
-                          "denied"); // Changed "rejected" to "denied" for consistency with status handling in controller
+                      controller.updatePermissionStatus(permission, "rejected");
                     },
                     style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.declineRed,
@@ -536,8 +539,7 @@ class StudentPermissionCard extends StatelessWidget {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      controller.updatePermissionStatus(permission,
-                          "approved"); // Changed "accepted" to "approved" for consistency with status handling in controller
+                      controller.updatePermissionStatus(permission, "accepted");
                     },
                     style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.successGreen,
