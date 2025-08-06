@@ -4,7 +4,6 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
 import 'package:http/http.dart' as http;
 
 import 'package:school_management_system_teacher_app/Widget/super_profile_picture.dart';
@@ -13,8 +12,6 @@ import 'package:school_management_system_teacher_app/routes/app_routes.dart';
 import 'package:school_management_system_teacher_app/screens/home/custom_drawer.dart';
 import 'package:school_management_system_teacher_app/utils/app_colors.dart';
 import 'package:shimmer/shimmer.dart';
-
-// Import your CustomDrawer here!
 
 // Extension to capitalize the first letter of a string, useful if API returns lowercase enums
 extension StringExtension on String {
@@ -25,9 +22,6 @@ extension StringExtension on String {
 }
 
 // --- DATA MODELS ---
-// (Your existing Student, StaffProfileForDrawer, PositionForDrawer classes go here,
-// assuming they are in separate files as implied by your imports, or if not,
-// ensure they are present in this file or imported correctly.)
 
 class Student {
   final String id;
@@ -76,23 +70,15 @@ class Student {
   // Factory constructor to create a Student from JSON, requiring validEnums
   factory Student.fromJson(Map<String, dynamic> json, List<String> validEnums) {
     // Helper function to process the raw status string from the backend.
-    // It returns a consistently formatted valid status (e.g., "Present", "Late")
-    // or the raw string itself if it's not a recognized enum but not null/empty,
-    // or null if the input is null or empty.
     String? _processRawStatusString(String? statusStr) {
       if (statusStr == null || statusStr.isEmpty) {
-        return null; // Null or empty input means no valid status from API
+        return null;
       }
-
-      // Check if the status string (case-insensitive) matches any of the valid enums
       for (String validEnum in validEnums) {
         if (statusStr.toLowerCase() == validEnum.toLowerCase()) {
-          return validEnum; // Return the correctly capitalized version from our list
+          return validEnum;
         }
       }
-
-      // If it's not null/empty and not a recognized enum, return the raw string as-is.
-      // This allows "uncheck" or other unexpected strings from the API to be displayed.
       return statusStr;
     }
 
@@ -102,22 +88,13 @@ class Student {
     // Determine if the student data is nested under a 'student' key
     if (json.containsKey('student') && json['student'] is Map) {
       studentDetails = json['student'];
-      // Prioritize 'attendence_enum' from the nested 'student' object
-      if (studentDetails.containsKey('attendence_enum')) {
-        rawAttendanceStatusFromBackend =
-            studentDetails['attendence_enum']?.toString();
-      }
     } else {
-      // If not nested, assume the current JSON map is the student details
       studentDetails = json;
     }
 
-    // If 'attendence_enum' was null or not found, check the 'attendance' field at the current level (non-nested)
-    if (rawAttendanceStatusFromBackend == null ||
-        rawAttendanceStatusFromBackend.isEmpty) {
-      if (json.containsKey('attendance')) {
-        rawAttendanceStatusFromBackend = json['attendance']?.toString();
-      }
+    // Use the `attendance` field at the main JSON level
+    if (json.containsKey('attendance')) {
+      rawAttendanceStatusFromBackend = json['attendance']?.toString();
     }
 
     String finalStatusForFrontend;
@@ -127,14 +104,10 @@ class Student {
         _processRawStatusString(rawAttendanceStatusFromBackend);
 
     if (processedStatusFromApi == null) {
-      // Case 1: Backend provided null or an empty string for both fields. Display "Not Set".
       finalStatusForFrontend = notSetStatus;
       isStudentSavedInitially = false;
     } else {
-      // Case 2: Backend provided a string. Display it.
       finalStatusForFrontend = processedStatusFromApi;
-      // Mark as saved ONLY if it's one of our explicitly valid enums.
-      // We check against the dynamically fetched validEnums.
       isStudentSavedInitially = validEnums.contains(processedStatusFromApi);
     }
 
@@ -145,7 +118,6 @@ class Student {
       avatarUrl: studentDetails['image'],
       status: finalStatusForFrontend,
       isSaved: isStudentSavedInitially,
-      // These scores are at the same level as 'attendance', not nested under 'student'
       attendance_score: (json['attendance_score'] ?? 0).toDouble(),
       class_practice: (json['class_practice'] ?? 0).toDouble(),
       home_work: (json['home_work'] ?? 0).toDouble(),
@@ -161,26 +133,19 @@ class Student {
   }
 
   // Converts Student object to JSON format suitable for backend PATCH request
-  // Requires validEnums for validation before sending to backend
   Map<String, dynamic> toJson(List<String> validEnums) {
     // Determine the status string to send to backend.
-    // If frontend's 'status' is our 'Not Set' placeholder, or any other unrecognized string, send null.
-    // Otherwise, convert to lowercase for backend enum.
     String? statusToSendToBackend;
     if (status == notSetStatus || !validEnums.contains(status)) {
-      // If it's "Not Set" or any other string not in our valid enums (like "uncheck"), send null
       statusToSendToBackend = null;
     } else {
-      // For "Present", "Late", etc., send lowercase.
       statusToSendToBackend = status.toLowerCase();
     }
 
     return {
-      'student':
-          id, // Correct key as per Mongoose schema for nested student object
+      'student': id,
       'attendance': statusToSendToBackend,
-      'checking_at': DateTime.now()
-          .toIso8601String(), // Correct key as per Mongoose schema
+      'checking_at': DateTime.now().toIso8601String(),
       'attendance_score': attendance_score ?? 0,
       'class_practice': class_practice ?? 0,
       'home_work': home_work ?? 0,
@@ -226,12 +191,12 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
   late Future<List<Student>> _studentListFuture;
   final AuthController _authController = Get.find<AuthController>();
 
-  final Map<String, String> _selectedStatuses = {};
+  // Use a map to track changes more efficiently
   final Map<String, String> _originalStatuses = {};
+  final Map<String, String> _pendingStatuses = {};
 
   List<Student> _students = [];
 
-  bool _hasChanges = false;
   bool _isSubmitting = false;
 
   // New state variables to store class-related IDs for attendance report
@@ -270,15 +235,9 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
     try {
       await Future.delayed(
           const Duration(seconds: 1)); // Simulate network delay
-      _validAttendanceEnums = [
-        "Present",
-        "Absent",
-        "Late",
-        "Permission",
-      ];
+      _validAttendanceEnums = ["Present", "Absent", "Late", "Permission"];
     } catch (e) {
       _errorMessageEnums = 'Error fetching attendance options: ${e.toString()}';
-      print(_errorMessageEnums);
     } finally {
       setState(() {
         _isLoadingEnums = false;
@@ -286,31 +245,30 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
     }
   }
 
-  void _updateHasChanges() {
-    bool changesDetected = false;
-    for (var student in _students) {
-      if (_selectedStatuses[student.id] != _originalStatuses[student.id]) {
-        changesDetected = true;
-        break;
-      }
-    }
+  void _onStatusChanged(String studentId, String newStatus) {
     if (mounted) {
       setState(() {
-        _hasChanges = changesDetected;
+        _pendingStatuses[studentId] = newStatus;
       });
     }
+  }
+
+  bool get _hasChanges {
+    if (_pendingStatuses.length != _originalStatuses.length) {
+      return true;
+    }
+    for (var entry in _pendingStatuses.entries) {
+      if (_originalStatuses[entry.key] != entry.value) {
+        return true;
+      }
+    }
+    return false;
   }
 
   Future<List<Student>> _fetchFilteredClassStudents() async {
     final uri = Uri.parse('http://188.166.242.109:5000/api/classes');
     final staffId = await _authController.getStaffId();
     final token = await _authController.getToken();
-
-    print('--- Fetching Classes ---');
-    print('Target URI: $uri');
-    print('Staff ID retrieved: $staffId');
-    print(
-        'Auth Token status: ${token != null && token.isNotEmpty ? "Present (first 10 chars: ${token.substring(0, min(token.length, 10))})" : "Missing or Empty"}');
 
     try {
       final response = await http.get(
@@ -321,9 +279,6 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
             'Authorization': 'Bearer $token',
         },
       );
-
-      print('GET /api/classes Response Status: ${response.statusCode}');
-      print('GET /api/classes Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final decodedBody = json.decode(response.body);
@@ -345,14 +300,16 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
             [];
 
         _originalStatuses.clear();
-        _selectedStatuses.clear();
+        _pendingStatuses.clear();
         for (var student in fetchedStudents) {
           _originalStatuses[student.id] = student.status;
-          _selectedStatuses[student.id] = student.status;
+          _pendingStatuses[student.id] = student.status;
         }
 
-        _students = fetchedStudents;
-        _updateHasChanges();
+        setState(() {
+          _students = fetchedStudents;
+        });
+
         return fetchedStudents;
       } else {
         String errorMessage = 'Failed to load class list.';
@@ -384,26 +341,18 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
 
   Future<void> _submitAllAttendance() async {
     if (_isSubmitting) return;
-    if (!_hasChanges) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('No attendance changes to submit.',
-              style: const TextStyle(fontFamily: _fontFamily)),
-          backgroundColor: Colors.blueAccent,
-        ),
-      );
-      return;
-    }
 
-    final unselectedStudents = _students
-        .where((s) => _selectedStatuses[s.id] == Student.notSetStatus)
+    final unselectedStudents = _pendingStatuses.entries
+        .where((entry) => entry.value == Student.notSetStatus)
         .toList();
+
     if (unselectedStudents.isNotEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-              'Please select an attendance status for all students. ${unselectedStudents.first.name} is "Not Set".',
-              style: const TextStyle(fontFamily: _fontFamily)),
+            'Please select an attendance status for all students. ${unselectedStudents.length} students are "Not Set".',
+            style: const TextStyle(fontFamily: _fontFamily),
+          ),
           backgroundColor: Colors.orange,
         ),
       );
@@ -416,8 +365,9 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-              'Missing class details (subject, duration, or staff ID). Please try reloading the screen.',
-              style: const TextStyle(fontFamily: _fontFamily)),
+            'Missing class details (subject, duration, or staff ID). Please try reloading the screen.',
+            style: const TextStyle(fontFamily: _fontFamily),
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -434,56 +384,44 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
       if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
     };
 
-    final List<Map<String, dynamic>> studentsUpdateData = _students.map((s) {
+    final List<Map<String, dynamic>> studentsUpdateData =
+        _students.map((student) {
+      final newStatus = _pendingStatuses[student.id] ?? student.status;
       final tempStudent = Student(
-        id: s.id,
-        name: s.name,
-        gender: s.gender,
-        avatarUrl: s.avatarUrl,
-        status: _selectedStatuses[s.id]!,
-        isSaved: s.isSaved,
-        attendance_score: s.attendance_score,
-        class_practice: s.class_practice,
-        home_work: s.home_work,
-        assignment_score: s.assignment_score,
-        presentation: s.presentation,
-        revision_test: s.revision_test,
-        final_exam_score: s.final_exam_score,
-        total_score: s.total_score,
-        work_book: s.work_book,
-        note: s.note,
-        comments: s.comments,
+        id: student.id,
+        name: student.name,
+        gender: student.gender,
+        avatarUrl: student.avatarUrl,
+        status: newStatus,
+        attendance_score: student.attendance_score,
+        class_practice: student.class_practice,
+        home_work: student.home_work,
+        assignment_score: student.assignment_score,
+        presentation: student.presentation,
+        revision_test: student.revision_test,
+        final_exam_score: student.final_exam_score,
+        total_score: student.total_score,
+        work_book: student.work_book,
+        note: student.note,
+        comments: student.comments,
       );
       return tempStudent.toJson(_validAttendanceEnums);
+    }).toList();
+
+    final List<Map<String, dynamic>> studentsReportData =
+        _students.map((student) {
+      final newStatus = _pendingStatuses[student.id] ?? student.status;
+      return {
+        'student': student.id,
+        'attendance': newStatus.toLowerCase(),
+        'checking_at': DateTime.now().toIso8601String(),
+        'note': student.note,
+      };
     }).toList();
 
     final updateClassUrl =
         Uri.parse('http://188.166.242.109:5000/api/classes/${widget.classId}');
     final updateClassBody = jsonEncode({'students': studentsUpdateData});
-
-    print('--- Submitting All Attendance (PATCH Class) ---');
-    print('PATCH URL: $updateClassUrl');
-    print('PATCH Headers: $headers');
-    print('PATCH Body (full students array): $updateClassBody');
-
-    final List<Map<String, dynamic>> studentsReportData = _students.map((s) {
-      final tempStudent = Student(
-        id: s.id,
-        name: s.name,
-        gender: s.gender,
-        avatarUrl: s.avatarUrl,
-        status: _selectedStatuses[s.id]!,
-        isSaved: s.isSaved,
-        note: s.note,
-      );
-      return {
-        'student': tempStudent.id,
-        'attendance': tempStudent.status.toLowerCase(),
-        'checking_at': DateTime.now().toIso8601String(),
-        'note': tempStudent.note,
-      };
-    }).toList();
-
     final createReportUrl =
         Uri.parse('http://188.166.242.109:5000/api/attendancereports');
     final createReportBody = jsonEncode({
@@ -494,53 +432,34 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
       'students': studentsReportData,
     });
 
-    print('--- Submitting Attendance Report (POST) ---');
-    print('POST URL: $createReportUrl');
-    print('POST Headers: $headers');
-    print('POST Body: $createReportBody');
-
     try {
       final patchFuture =
           http.patch(updateClassUrl, headers: headers, body: updateClassBody);
       final postFuture =
           http.post(createReportUrl, headers: headers, body: createReportBody);
-
       final responses = await Future.wait([patchFuture, postFuture]);
-
       final patchResponse = responses[0];
       final postResponse = responses[1];
 
       bool allSucceeded = true;
       String errorMessage = '';
 
-      if (patchResponse.statusCode == 200) {
-        print('PATCH /api/classes/${widget.classId} Succeeded.');
-      } else {
+      if (patchResponse.statusCode != 200) {
         allSucceeded = false;
         errorMessage +=
             'Failed to update class: ${patchResponse.statusCode} - ${patchResponse.body}\n';
-        print(
-            'PATCH /api/classes/${widget.classId} Failed: ${patchResponse.statusCode} - ${patchResponse.body}');
       }
 
-      if (postResponse.statusCode == 201) {
-        print('POST /api/attendancereports Succeeded.');
-      } else {
+      if (postResponse.statusCode != 201) {
         allSucceeded = false;
         errorMessage +=
             'Failed to create attendance report: ${postResponse.statusCode} - ${postResponse.body}\n';
-        print(
-            'POST /api/attendancereports Failed: ${postResponse.statusCode} - ${postResponse.body}');
       }
 
       if (mounted) {
         if (allSucceeded) {
           setState(() {
-            for (var student in _students) {
-              student.isSaved = true;
-              _originalStatuses[student.id] = _selectedStatuses[student.id]!;
-            }
-            _hasChanges = false;
+            _originalStatuses.addAll(_pendingStatuses);
           });
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -558,12 +477,6 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
               duration: const Duration(seconds: 5),
             ),
           );
-          setState(() {
-            for (var student in _students) {
-              student.isSaved = false;
-            }
-            _hasChanges = true;
-          });
         }
       }
     } on SocketException {
@@ -571,15 +484,6 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
         SnackBar(
           content: Text(
               'No Internet connection. Please check your network and retry submission.',
-              style: const TextStyle(fontFamily: _fontFamily)),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } on FormatException {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-              'Received unexpected data format from server during submission. (JSON parsing error)',
               style: const TextStyle(fontFamily: _fontFamily)),
           backgroundColor: Colors.red,
         ),
@@ -593,14 +497,6 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
           backgroundColor: Colors.red,
         ),
       );
-      if (mounted) {
-        setState(() {
-          for (var student in _students) {
-            student.isSaved = false;
-          }
-          _hasChanges = true;
-        });
-      }
     } finally {
       if (mounted) {
         setState(() {
@@ -615,7 +511,6 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
   static const Color _cardBackground = Colors.white;
   static const Color _skeletonColor = Color(0xFFE0E0E0);
   static const Color _mediumText = Color(0xFF7F8C8D);
-
   static const Color _skeletonHighlightColor = Color(0xFFF0F0F0);
 
   @override
@@ -652,17 +547,12 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
           ),
         ],
       ),
-      // --- HERE IS THE KEY CHANGE ---
       endDrawer: CustomDrawer(
         onLogout: () {
-          // You need to define what should happen when logout is triggered from the drawer.
-          // For example, navigate to login screen:
-          _authController
-              .logout(); // Assuming AuthController has a logout method
-          Get.offAllNamed(AppRoutes.login); // Or whatever your login route is
+          _authController.logout();
+          Get.offAllNamed(AppRoutes.login);
         },
       ),
-      // --- END KEY CHANGE ---
       body: Column(
         children: [
           _buildHeader(),
@@ -689,9 +579,7 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
                               ),
                               const SizedBox(height: 20),
                               ElevatedButton.icon(
-                                onPressed: () {
-                                  _initializeData();
-                                },
+                                onPressed: _initializeData,
                                 icon: const Icon(Icons.refresh),
                                 label: const Text("Retry",
                                     style: TextStyle(fontFamily: _fontFamily)),
@@ -891,16 +779,10 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
         return _StudentAttendanceCard(
           key: ValueKey(student.id),
           student: student,
-          selectedStatus: _selectedStatuses[student.id]!,
-          originalStatus: _originalStatuses[student.id] ?? Student.notSetStatus,
+          selectedStatus: _pendingStatuses[student.id]!,
+          originalStatus: _originalStatuses[student.id]!,
           onStatusChanged: (newStatus) {
-            if (mounted) {
-              setState(() {
-                _selectedStatuses[student.id] = newStatus;
-                student.isSaved = false;
-                _updateHasChanges();
-              });
-            }
+            _onStatusChanged(student.id, newStatus);
           },
           validAttendanceEnums: _validAttendanceEnums,
         );
@@ -923,53 +805,54 @@ class _CheckAttendanceScreenState extends State<CheckAttendanceScreen> {
 
   Widget _buildStudentSkeletonLoader() {
     return Container(
-        decoration: BoxDecoration(
-          color: _cardBackground,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        padding: const EdgeInsets.all(16),
-        child: Opacity(
-          opacity: 0.5,
-          child: Column(
-            children: [
-              Row(children: [
-                Container(
-                  width: 52,
-                  height: 52,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                      Container(
-                          width: double.infinity,
-                          height: 16,
-                          decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(4))),
-                      const SizedBox(height: 8),
-                      Container(
-                          width: 120,
-                          height: 14,
-                          decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(4))),
-                    ])),
-              ]),
-              const SizedBox(height: 18),
+      decoration: BoxDecoration(
+        color: _cardBackground,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Opacity(
+        opacity: 0.5,
+        child: Column(
+          children: [
+            Row(children: [
               Container(
-                  height: 40,
-                  decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10)))
-            ],
-          ),
-        ));
+                width: 52,
+                height: 52,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                    Container(
+                        width: double.infinity,
+                        height: 16,
+                        decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(4))),
+                    const SizedBox(height: 8),
+                    Container(
+                        width: 120,
+                        height: 14,
+                        decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(4))),
+                  ])),
+            ]),
+            const SizedBox(height: 18),
+            Container(
+                height: 40,
+                decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10)))
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -1004,12 +887,10 @@ class _StudentAttendanceCardState extends State<_StudentAttendanceCard> {
   static const Color _greyBorder = Color(0xFFE0E6ED);
   static const Color _notSetColor = Color(0xFF95A5A6);
   static const Color _unrecognizedStatusColor = Color(0xFF8D6E63);
-
   static const String _fontFamily = AppFonts.fontFamily;
 
   Color getStatusColor(String status, {bool isBackground = false}) {
     final List<String> validEnums = widget.validAttendanceEnums;
-
     for (String validEnum in validEnums) {
       if (status.toLowerCase() == validEnum.toLowerCase()) {
         switch (validEnum) {
@@ -1032,17 +913,14 @@ class _StudentAttendanceCardState extends State<_StudentAttendanceCard> {
         }
       }
     }
-
     if (status == Student.notSetStatus) {
       return isBackground ? const Color(0xFFF0F3F4) : _notSetColor;
     }
-
     return isBackground ? const Color(0xFFF5EFEA) : _unrecognizedStatusColor;
   }
 
   IconData getStatusIcon(String status) {
     final List<String> validEnums = widget.validAttendanceEnums;
-
     for (String validEnum in validEnums) {
       if (status.toLowerCase() == validEnum.toLowerCase()) {
         switch (validEnum) {
@@ -1057,11 +935,9 @@ class _StudentAttendanceCardState extends State<_StudentAttendanceCard> {
         }
       }
     }
-
     if (status == Student.notSetStatus) {
       return Icons.info_outline;
     }
-
     return Icons.help_outline;
   }
 
@@ -1081,9 +957,7 @@ class _StudentAttendanceCardState extends State<_StudentAttendanceCard> {
   @override
   Widget build(BuildContext context) {
     bool isDone = widget.selectedStatus == widget.originalStatus &&
-        widget.student.isSaved &&
         widget.selectedStatus != Student.notSetStatus;
-
     bool hasPendingLocalChange = widget.selectedStatus != widget.originalStatus;
 
     return Container(
