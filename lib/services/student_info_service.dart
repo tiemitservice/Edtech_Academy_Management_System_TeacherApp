@@ -6,12 +6,12 @@ import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 
 class StudentInfoService {
-  final String _baseUrl =
-      'https://edtech-academy-management-system-server.onrender.com/api';
+  final String _baseUrl = 'http://188.166.242.109:5000/api';
 
   Future<Student> fetchStudentById(String studentId) async {
     final String url = '$_baseUrl/classes';
-    debugPrint('StudentInfoService: Attempting to fetch classes from: $url to find student ID: $studentId');
+    debugPrint(
+        'StudentInfoService: Attempting to fetch classes from: $url to find student ID: $studentId');
     try {
       final response = await http.get(Uri.parse(url));
 
@@ -47,7 +47,8 @@ class StudentInfoService {
 
             if (studentEntry != null) {
               foundStudentEntry = studentEntry as Map<String, dynamic>;
-              debugPrint('StudentInfoService: Student with ID $studentId found in class: ${classItem['name']}');
+              debugPrint(
+                  'StudentInfoService: Student with ID $studentId found in class: ${classItem['name']}');
               break;
             }
           }
@@ -57,22 +58,26 @@ class StudentInfoService {
           // ✅ FIX: Passes the entire entry to fromJson, not just the nested part.
           return Student.fromJson(foundStudentEntry);
         } else {
-          debugPrint('StudentInfoService: Student with ID $studentId not found after iterating through all classes.');
+          debugPrint(
+              'StudentInfoService: Student with ID $studentId not found after iterating through all classes.');
           throw Exception('Student with ID $studentId not found.');
         }
       } else {
-        debugPrint('StudentInfoService ERROR: Failed to load classes. Status Code: ${response.statusCode}, Body: ${response.body}');
+        debugPrint(
+            'StudentInfoService ERROR: Failed to load classes. Status Code: ${response.statusCode}, Body: ${response.body}');
         throw Exception(
             'Failed to load student data. Server responded with status ${response.statusCode}');
       }
     } catch (e) {
-      debugPrint('StudentInfoService CATCH ERROR: Exception during fetchStudentById: $e');
+      debugPrint(
+          'StudentInfoService CATCH ERROR: Exception during fetchStudentById: $e');
       if (e is http.ClientException) {
         throw Exception('Network error: Could not connect to the server.');
       } else if (e is Exception && e.toString().contains('SocketException')) {
         throw Exception('No internet connection. Please check your network.');
       }
-      throw Exception('An unexpected error occurred: ${e.toString().contains("Exception:") ? e.toString().replaceFirst("Exception: ", "") : e.toString()}');
+      throw Exception(
+          'An unexpected error occurred: ${e.toString().contains("Exception:") ? e.toString().replaceFirst("Exception: ", "") : e.toString()}');
     }
   }
 }

@@ -4,8 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:school_management_system_teacher_app/models/student.dart';
 
-const String _apiBaseUrl =
-    'https://edtech-academy-management-system-server.onrender.com/api';
+const String _apiBaseUrl = 'http://188.166.242.109:5000/api';
 
 class StudentsByClassResult {
   final List<Student> students;
@@ -25,13 +24,10 @@ class StudentListService extends GetxService {
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
-        final List<dynamic> allClassesData =
-            responseData['data'];
+        final List<dynamic> allClassesData = responseData['data'];
 
         final classJson = allClassesData.firstWhere(
-          (c) =>
-              c['_id'] == classId &&
-              c['staff'] == staffId,
+          (c) => c['_id'] == classId && c['staff'] == staffId,
           orElse: () => throw Exception(
               'Class not found or teacher not assigned to this class.'),
         );
@@ -46,7 +42,8 @@ class StudentListService extends GetxService {
                 studentsInClass.add(student);
               }
             } catch (e) {
-              print('Skipping invalid student record in class ${classJson['name']}: $e');
+              print(
+                  'Skipping invalid student record in class ${classJson['name']}: $e');
             }
           }
         }

@@ -175,7 +175,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: AppColors.primaryBlue.withOpacity(0.1),
+                        color: AppColors.primaryBlue.withAlpha(1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -215,7 +215,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.borderGrey.withOpacity(0.4),
+            color: AppColors.borderGrey.withAlpha(4),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -236,7 +236,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
               // Using CachedNetworkImage for the profile picture
               CircleAvatar(
                 radius: 30,
-                backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
+                backgroundColor: AppColors.primaryBlue.withAlpha(1),
                 child: ClipOval(
                   child: student.avatarUrl != null &&
                           student.avatarUrl!.isNotEmpty
@@ -258,7 +258,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
                                   fullName: displayName,
                                   radius: 30,
                                   backgroundColor:
-                                      AppColors.primaryBlue.withOpacity(0.1),
+                                      AppColors.primaryBlue.withAlpha(1),
                                   textColor: AppColors.darkText,
                                   fontFamily: AppFonts.fontFamily),
                         )
@@ -268,7 +268,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
                           fullName: displayName,
                           radius: 30,
                           backgroundColor:
-                              AppColors.primaryBlue.withOpacity(0.1),
+                              AppColors.primaryBlue.withAlpha(1),
                           textColor: AppColors.darkText,
                           fontFamily: AppFonts.fontFamily,
                         ),
@@ -346,7 +346,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.borderGrey.withOpacity(0.2),
+            color: AppColors.borderGrey.withAlpha(2),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -360,7 +360,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: AppColors.skeletonBaseColor.withOpacity(0.5),
+              color: AppColors.skeletonBaseColor.withAlpha(5),
               shape: BoxShape.circle,
             ),
           ),
@@ -374,7 +374,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
                   height: 18,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: AppColors.skeletonBaseColor.withOpacity(0.5),
+                    color: AppColors.skeletonBaseColor.withAlpha(5),
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -384,7 +384,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
                   height: 14,
                   width: 120,
                   decoration: BoxDecoration(
-                    color: AppColors.skeletonBaseColor.withOpacity(0.5),
+                    color: AppColors.skeletonBaseColor.withAlpha(5),
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -394,7 +394,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
                   height: 14,
                   width: 150,
                   decoration: BoxDecoration(
-                    color: AppColors.skeletonBaseColor.withOpacity(0.5),
+                    color: AppColors.skeletonBaseColor.withAlpha(5),
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -404,7 +404,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
                   height: 14,
                   width: 180,
                   decoration: BoxDecoration(
-                    color: AppColors.skeletonBaseColor.withOpacity(0.5),
+                    color: AppColors.skeletonBaseColor.withAlpha(5),
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -417,7 +417,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
             height: 20,
             width: 20,
             decoration: BoxDecoration(
-              color: AppColors.skeletonBaseColor.withOpacity(0.5),
+              color: AppColors.skeletonBaseColor.withAlpha(5),
               shape: BoxShape.circle,
             ),
           ),
@@ -487,7 +487,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.person_off_rounded,
-                size: 150, color: AppColors.mediumText.withOpacity(0.5)),
+                size: 150, color: AppColors.mediumText.withAlpha(5)),
             const SizedBox(height: 24),
             Text(
               'No Students Found in $className',

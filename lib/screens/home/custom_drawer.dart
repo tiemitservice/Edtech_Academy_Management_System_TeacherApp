@@ -252,109 +252,109 @@ class _CustomDrawerState extends State<CustomDrawer> {
     );
   }
 
-  // --- Method for the stylish logout confirmation dialog ---
-  void _showStylishLogoutConfirmDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          elevation: 10,
-          backgroundColor: Colors.white,
-          title: Column(
-            children: [
-              Icon(
-                Icons.warning_amber_rounded,
-                color: Colors.redAccent,
-                size: 48,
-              ),
-              const SizedBox(height: 10),
-              Text(
-                "Confirm Logout",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: _darkText,
-                  fontFamily: AppFonts.fontFamily,
-                ),
-              ),
-            ],
-          ),
-          content: Text(
-            "Are you sure you want to end your session?",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey.shade700,
-              fontFamily: AppFonts.fontFamily,
-              height: 1.4,
-            ),
-          ),
-          actionsAlignment: MainAxisAlignment.spaceAround,
-          actionsPadding:
-              const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
-          actions: <Widget>[
-            OutlinedButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop(false);
-              },
-              style: OutlinedButton.styleFrom(
-                foregroundColor: _primaryBlue,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  side: BorderSide(color: _primaryBlue.withOpacity(0.5)),
-                ),
-                minimumSize: Size(Get.width * 0.35, 45),
-              ),
-              child: Text(
-                "Cancel",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: AppFonts.fontFamily,
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop(true);
-              },
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red.shade600,
-                  foregroundColor: Colors.white,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  minimumSize: Size(Get.width * 0.35, 45),
-                  elevation: 3,
-                  shadowColor: const Color.fromARGB(0, 0, 0, 0)),
-              child: Text(
-                "Logout",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: AppFonts.fontFamily,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    ).then((confirmed) {
-      if (confirmed != null && confirmed) {
-        Navigator.pop(context); // Close the drawer
-        widget.onLogout();
-      }
-    });
-  }
+  // // --- Method for the stylish logout confirmation dialog ---
+  // void _showStylishLogoutConfirmDialog(BuildContext context) {
+  //   showDialog(
+  //     context: context,
+  //     barrierDismissible: true,
+  //     builder: (BuildContext dialogContext) {
+  //       return AlertDialog(
+  //         shape: RoundedRectangleBorder(
+  //           borderRadius: BorderRadius.circular(20),
+  //         ),
+  //         elevation: 10,
+  //         backgroundColor: Colors.white,
+  //         title: Column(
+  //           children: [
+  //             Icon(
+  //               Icons.warning_amber_rounded,
+  //               color: Colors.redAccent,
+  //               size: 48,
+  //             ),
+  //             const SizedBox(height: 10),
+  //             Text(
+  //               "Confirm Logout",
+  //               textAlign: TextAlign.center,
+  //               style: TextStyle(
+  //                 fontSize: 22,
+  //                 fontWeight: FontWeight.bold,
+  //                 color: _darkText,
+  //                 fontFamily: AppFonts.fontFamily,
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //         content: Text(
+  //           "Are you sure you want to end your session?",
+  //           textAlign: TextAlign.center,
+  //           style: TextStyle(
+  //             fontSize: 16,
+  //             color: Colors.grey.shade700,
+  //             fontFamily: AppFonts.fontFamily,
+  //             height: 1.4,
+  //           ),
+  //         ),
+  //         actionsAlignment: MainAxisAlignment.spaceAround,
+  //         actionsPadding:
+  //             const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
+  //         actions: <Widget>[
+  //           OutlinedButton(
+  //             onPressed: () {
+  //               Navigator.of(dialogContext).pop(false);
+  //             },
+  //             style: OutlinedButton.styleFrom(
+  //               foregroundColor: _primaryBlue,
+  //               padding:
+  //                   const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+  //               shape: RoundedRectangleBorder(
+  //                 borderRadius: BorderRadius.circular(10),
+  //                 side: BorderSide(color: _primaryBlue.withOpacity(0.5)),
+  //               ),
+  //               minimumSize: Size(Get.width * 0.35, 45),
+  //             ),
+  //             child: Text(
+  //               "Cancel",
+  //               style: TextStyle(
+  //                 fontSize: 16,
+  //                 fontWeight: FontWeight.w600,
+  //                 fontFamily: AppFonts.fontFamily,
+  //               ),
+  //             ),
+  //           ),
+  //           ElevatedButton(
+  //             onPressed: () {
+  //               Navigator.of(dialogContext).pop(true);
+  //             },
+  //             style: ElevatedButton.styleFrom(
+  //                 backgroundColor: Colors.red.shade600,
+  //                 foregroundColor: Colors.white,
+  //                 padding:
+  //                     const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+  //                 shape: RoundedRectangleBorder(
+  //                   borderRadius: BorderRadius.circular(10),
+  //                 ),
+  //                 minimumSize: Size(Get.width * 0.35, 45),
+  //                 elevation: 3,
+  //                 shadowColor: const Color.fromARGB(0, 0, 0, 0)),
+  //             child: Text(
+  //               "Logout",
+  //               style: TextStyle(
+  //                 fontSize: 16,
+  //                 fontWeight: FontWeight.w600,
+  //                 fontFamily: AppFonts.fontFamily,
+  //               ),
+  //             ),
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   ).then((confirmed) {
+  //     if (confirmed != null && confirmed) {
+  //       Navigator.pop(context); // Close the drawer
+  //       widget.onLogout();
+  //     }
+  //   });
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -588,9 +588,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () {
-                  _showStylishLogoutConfirmDialog(context);
-                },
+                onPressed: _showLogoutConfirmationDialog,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red.shade600,
                   foregroundColor: Colors.white,
@@ -618,6 +616,97 @@ class _CustomDrawerState extends State<CustomDrawer> {
     );
   }
 
+
+Future<void> _showLogoutConfirmationDialog() async {
+    final shouldLogout = await Get.dialog<bool>(
+      Dialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Log Out',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: AppFonts.fontFamily, // Apply NotoSerifKhmer
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Are you sure you want to log out from your account?',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 15,
+                  color: Colors.black54,
+                  fontFamily: AppFonts.fontFamily, // Apply NotoSerifKhmer
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Get.back(result: false),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Colors.black87),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(
+                          fontFamily: AppFonts.fontFamily, // Apply NotoSerifKhmer
+                          fontSize: 14,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        _authController.deleteToken();
+                        Get.back(result: true);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: const Text(
+                        'Log Out',
+                        style: TextStyle(
+                          fontFamily: AppFonts.fontFamily, // Apply NotoSerifKhmer
+                          fontSize: 14,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (shouldLogout == true) {
+      await _authController.deleteToken();
+      Get.offAllNamed(
+          '/login'); // Navigate to login and clear all previous routes
+    }
+  }
   // --- New/Updated Helper Widgets for Loading and Error States ---
 
   Widget _buildShimmerUserInfo() {
